@@ -2,6 +2,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.awt.geom.Arc2D;
+import java.awt.geom.GeneralPath;
 
 /**
  * A JPanel-based class that simulates flocking behavior using Boid objects.
@@ -17,6 +19,10 @@ public class FlockSimulation extends JPanel {
     Timer timer;
     // List of all Boids in the simulation
     List<Boid> boids = new ArrayList<>();
+
+    float areaOfInfluence = 50.0f;
+    int fieldOfView = 90;
+    float desiredVelocity = 1.0f;
 
     /**
      * Constructs the FlockSimulation panel, initializes the simulation environment,
@@ -55,7 +61,7 @@ public class FlockSimulation extends JPanel {
         super.paintComponent(g);
         Graphics2D g2d = (Graphics2D) g; // Cast to use Java2D features
         for (Boid boid : boids) {
-            boid.update();
+            boid.update(boids);
             // Convert the direction of velocity to an angle
             double angle = Math.atan2(boid.velocity.y, boid.velocity.x);
 
@@ -96,26 +102,48 @@ public class FlockSimulation extends JPanel {
      * @param specialBoid The special boid to draw debug information for.
      */
     private void drawDebugInfo(Graphics2D g2d, Boid specialBoid) {
-        // Some example debug info for now
-        float visionRadius = 50; // How far the boid can "see"
-        double visionAngle = 45; // Vision angle in degrees
+        // Calculate the boid's direction in degrees
+        double directionInRadians = Math.atan2(specialBoid.velocity.y, specialBoid.velocity.x);
+        double directionInDegrees = Math.toDegrees(directionInRadians);
 
-        // Calculate and draw vision cone (simplified example)
-        double angle = Math.atan2(specialBoid.velocity.y, specialBoid.velocity.x);
-        double leftAngle = angle - Math.toRadians(visionAngle / 2);
-        double rightAngle = angle + Math.toRadians(visionAngle / 2);
+        // Calculate the start angle for the arc
+        int startAngle = (int) (360 - (directionInDegrees + fieldOfView / 2));
 
+        // Set drawing properties
+        g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.5f));
+
+        // Calculate left and right angles of field of view
+        int leftAngleDeg = (int) (directionInDegrees - (fieldOfView / 2));
+        int rightAngleDeg = (int) (directionInDegrees + (fieldOfView / 2));
+
+        // Convert angles to radians
+        double leftAngleRad = Math.toRadians(leftAngleDeg);
+        double rightAngleRad = Math.toRadians(rightAngleDeg);
+
+        // Draw lines for FOV edges without an outline
+        drawLineToFOV(g2d, specialBoid, leftAngleRad);
+        drawLineToFOV(g2d, specialBoid, rightAngleRad);
+
+        // Fill the FoV arc with 50% transparency
+        int x = (int) (specialBoid.position.x - areaOfInfluence);
+        int y = (int) (specialBoid.position.y - areaOfInfluence);
+        int diameter = (int) (2 * areaOfInfluence);
+        g2d.fillArc(x, y, diameter, diameter, startAngle, fieldOfView);
+
+        // Reset transparency
+        g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1.0f));
+    }
+
+    // Helper method to draw line to FOV edge without an outline
+    private void drawLineToFOV(Graphics2D g2d, Boid specialBoid, double angleRad) {
+        Stroke previousStroke = g2d.getStroke();
+        g2d.setStroke(new BasicStroke(0)); // Set transparent stroke
         g2d.drawLine(
                 (int) specialBoid.position.x,
                 (int) specialBoid.position.y,
-                (int) (specialBoid.position.x + Math.cos(leftAngle) * visionRadius),
-                (int) (specialBoid.position.y + Math.sin(leftAngle) * visionRadius));
-
-        g2d.drawLine(
-                (int) specialBoid.position.x,
-                (int) specialBoid.position.y,
-                (int) (specialBoid.position.x + Math.cos(rightAngle) * visionRadius),
-                (int) (specialBoid.position.y + Math.sin(rightAngle) * visionRadius));
+                (int) (specialBoid.position.x + Math.cos(angleRad) * areaOfInfluence),
+                (int) (specialBoid.position.y + Math.sin(angleRad) * areaOfInfluence));
+        g2d.setStroke(previousStroke); // Restore previous stroke
     }
 
     /**
@@ -125,10 +153,42 @@ public class FlockSimulation extends JPanel {
      * @param args Command line arguments (not used).
      */
     public static void main(String[] args) {
-        JFrame frame = new JFrame("Flock Simulation");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.add(new FlockSimulation()); // Add the simulation panel to the frame
-        frame.pack(); // Fit the frame size to the preferred size of the panel
-        frame.setVisible(true); // Display the frame
+        SwingUtilities.invokeLater(() -> {
+            FlockSimulation simulation = new FlockSimulation();
+            JFrame frame = new JFrame("Flock Simulation");
+            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            frame.add(simulation);
+            frame.pack();
+            frame.setVisible(true);
+
+            new ControlPanel(simulation);
+        });
+    }
+
+    public void setAreaOfInfluence(float areaOfInfluence) {
+        this.areaOfInfluence = areaOfInfluence;
+        for (Boid boid : boids) {
+            boid.setAreaOfInfluence(areaOfInfluence);
+        }
+    }
+
+    public void setFieldOfView(int fieldOfView) {
+        this.fieldOfView = fieldOfView;
+        for (Boid boid : boids) {
+            boid.setFieldOfView(fieldOfView);
+        }
+    }
+
+    public void setDesiredVelocity(float desiredVelocity) {
+        this.desiredVelocity = desiredVelocity;
+        for (Boid boid : boids) {
+            boid.setDesiredVelocity(desiredVelocity);
+        }
+    }
+
+    public void setMaxSteerForce(float maxSteerForce) {
+        for (Boid boid : boids) {
+            boid.setMaxSteerForce(maxSteerForce);
+        }
     }
 }

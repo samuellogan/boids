@@ -101,6 +101,31 @@ public class Vector {
     }
 
     /**
+     * Calculates the distance between two vectors.
+     *
+     * @param v1 The first vector.
+     * @param v2 The second vector.
+     * @return The distance between the two vectors.
+     */
+    public static float dist(Vector v1, Vector v2) {
+        float dx = v2.x - v1.x;
+        float dy = v2.y - v1.y;
+        return (float) Math.sqrt(dx * dx + dy * dy);
+    }
+
+    /**
+     * Subtracts the second vector from the first vector and returns the result as a
+     * new Vector.
+     *
+     * @param v1 The vector to subtract from.
+     * @param v2 The vector to be subtracted.
+     * @return A new Vector that is the result of the subtraction v1 - v2.
+     */
+    public static Vector sub(Vector v1, Vector v2) {
+        return new Vector(v1.x - v2.x, v1.y - v2.y);
+    }
+
+    /**
      * Creates a random 2D unit vector with a random direction.
      *
      * @return A new Vector object representing a 2D unit vector with a random
@@ -109,5 +134,22 @@ public class Vector {
     public static Vector random2D() {
         float angle = (float) (Math.random() * Math.PI * 2);
         return new Vector((float) Math.cos(angle), (float) Math.sin(angle));
+    }
+
+    /**
+     * Calculates the angle between two vectors.
+     *
+     * @param v1 The first vector.
+     * @param v2 The second vector.
+     * @return The angle in radians between the two vectors.
+     */
+    public static float angleBetween(Vector v1, Vector v2) {
+        float dotProduct = v1.x * v2.x + v1.y * v2.y;
+        float magnitudeV1 = v1.magnitude();
+        float magnitudeV2 = v2.magnitude();
+        float cosineAngle = dotProduct / (magnitudeV1 * magnitudeV2);
+        // Ensure the cosine value is within -1 and 1 to avoid NaN from acos()
+        cosineAngle = Math.max(-1, Math.min(1, cosineAngle));
+        return (float) Math.acos(cosineAngle);
     }
 }

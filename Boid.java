@@ -1,3 +1,5 @@
+import java.util.List;
+
 /**
  * Represents a Boid, an autonomous agent designed to simulate behaviors such as
  * flocking, alignment, cohesion, and separation in a group of similar agents.
@@ -18,6 +20,14 @@ public class Boid {
     Vector acceleration;
     // The size of the screen, used to wrap Boids around the borders.
     Vector screenSize;
+
+    // Field of View (FoV) angle in radians (e.g., PI/2 for 90 degrees)
+    float fov = (float) Math.PI / 2;
+    // Area of influence (radius within which it reacts to other boids)
+    float areaOfInfluence = 50;
+
+    float desiredVelocity;
+    float maxSteerForce;
 
     /**
      * Constructs a Boid given an initial position. The Boid's velocity is
@@ -40,11 +50,25 @@ public class Boid {
      * After updating, it resets the acceleration for the next cycle and ensures
      * that the Boid wraps around the screen borders, creating a toroidal space.
      */
-    public void update() {
-        velocity.add(acceleration);
-        position.add(velocity);
-        wrapAroundBorders();
-        acceleration.multiply(0); // Reset acceleration to 0 after each update to prevent perpetual acceleration
+    public void update(List<Boid> boids) {
+        Vector avoidForce = avoidOthers(boids);
+        acceleration.add(avoidForce);
+
+        // Calculate new velocity based on current acceleration
+        Vector newVelocity = new Vector(velocity.x, velocity.y);
+        newVelocity.add(acceleration);
+
+        // Adjust the direction of velocity without changing its magnitude (speed)
+        if (newVelocity.magnitude() > 0) {
+            newVelocity.normalize(); // Set direction
+            newVelocity.multiply(velocity.magnitude()); // Maintain original speed
+        }
+
+        velocity = newVelocity; // Apply the adjusted velocity
+        position.add(velocity); // Update position based on the adjusted velocity
+
+        wrapAroundBorders(); // Handle screen wrapping
+        acceleration.multiply(0); // Reset acceleration after each update
     }
 
     /**
@@ -67,6 +91,39 @@ public class Boid {
             position.y -= screenSize.y;
     }
 
+    private Vector avoidOthers(List<Boid> boids) {
+        Vector steer = new Vector(0, 0);
+        int count = 0;
+
+        for (Boid other : boids) {
+            float distance = Vector.dist(this.position, other.position);
+            float angle = Vector.angleBetween(this.velocity, Vector.sub(other.position, this.position));
+
+            if (other != this && distance < areaOfInfluence && angle < fov) {
+                Vector diff = Vector.sub(this.position, other.position);
+                diff.normalize();
+                // Instead of dividing by distance, consider using a different approach to
+                // ensure smooth steering
+                diff.multiply(1 / distance); // This emphasizes changing direction more smoothly
+                steer.add(diff);
+                count++;
+            }
+        }
+
+        if (count > 0) {
+            steer.divide((float) count);
+        }
+
+        if (steer.magnitude() > 0) {
+            // Apply the steering force more as a directional change rather than directly
+            // affecting speed
+            steer.normalize();
+            steer.multiply(maxSteerForce); // Use maxSteerForce to adjust the steer vector
+        }
+
+        return steer;
+    }
+
     /**
      * Sets the size of the screen for the Boid to use when wrapping around the
      * edges.
@@ -76,5 +133,46 @@ public class Boid {
      */
     public void setScreenSize(float width, float height) {
         screenSize = new Vector(width, height);
+    }
+
+    /**
+     * Sets the area of influence for the Boid, which determines the radius within
+     * which it reacts to other Boids.
+     * 
+     * @param areaOfInfluence The new area of influence for the Boid.
+     */
+    public void setAreaOfInfluence(float areaOfInfluence) {
+        this.areaOfInfluence = areaOfInfluence;
+    }
+
+    /**
+     * Sets the field of view for the Boid, which determines the angle within which
+     * it reacts to other Boids.
+     * 
+     * @param fov The new field of view for the Boid in radians.
+     */
+    public void setFieldOfView(float fov) {
+        this.fov = fov;
+    }
+
+    /**
+     * Sets the desired velocity for the Boid, which determines the speed at which
+     * it
+     * steers.
+     * 
+     * @param desiredVelocity The new desired velocity for the Boid.
+     */
+    public void setDesiredVelocity(float desiredVelocity) {
+        this.desiredVelocity = desiredVelocity;
+    }
+
+    /**
+     * Sets the maximum steering force for the Boid, which determines the maximum
+     * force it can apply to steer.
+     * 
+     * @param maxSteerForce The new maximum steering force for the Boid.
+     */
+    public void setMaxSteerForce(float maxSteerForce) {
+        this.maxSteerForce = maxSteerForce;
     }
 }
