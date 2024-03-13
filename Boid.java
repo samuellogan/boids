@@ -54,6 +54,9 @@ public class Boid {
         Vector avoidForce = avoidOthers(boids);
         acceleration.add(avoidForce);
 
+        // Apply alignment behavior
+        align(boids);
+
         // Calculate new velocity based on current acceleration
         Vector newVelocity = new Vector(velocity.x, velocity.y);
         newVelocity.add(acceleration);
@@ -122,6 +125,34 @@ public class Boid {
         }
 
         return steer;
+    }
+
+    public void align(List<Boid> boids) {
+        Vector sum = new Vector(0, 0); // Initialize sum of velocities
+        int count = 0; // Initialize count of nearby boids
+
+        // Iterate through all boids
+        for (Boid other : boids) {
+            float distance = Vector.dist(this.position, other.position);
+            float angle = Vector.angleBetween(this.velocity, Vector.sub(other.position, this.position));
+
+            // Check if the other boid is within the circle of influence and field of view
+            if (other != this && distance < areaOfInfluence && angle < fov) {
+                sum.add(other.velocity); // Add velocity to sum
+                count++; // Increment count of nearby boids
+            }
+        }
+
+        if (count > 0) {
+            // Calculate the average velocity
+            sum.divide((float) count);
+
+            // Limit the change in velocity to a maximum rate
+            sum.limit(maxSteerForce);
+
+            // Apply the alignment force to adjust the velocity
+            acceleration.add(sum);
+        }
     }
 
     /**
