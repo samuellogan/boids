@@ -27,7 +27,8 @@ public class FlockSimulation extends JPanel {
     public FlockSimulation() {
         // Set the size and background color of the simulation panel
         setPreferredSize(new Dimension(800, 600));
-        setBackground(Color.BLACK);
+        Color backgroundColor = new Color(0x252628);
+        setBackground(backgroundColor);
 
         // Setup the timer for regular updates
         timer = new Timer(16, e -> repaint()); // Approx. 60 FPS
@@ -36,6 +37,7 @@ public class FlockSimulation extends JPanel {
         for (int i = 0; i < 100; i++) {
             boids.add(new Boid((float) Math.random() * 800, (float) Math.random() * 600));
         }
+        boids.get(0).isDebug = true; // Set the first boid to debug mode
 
         // Start the simulation
         timer.start();
@@ -58,7 +60,7 @@ public class FlockSimulation extends JPanel {
             double angle = Math.atan2(boid.velocity.y, boid.velocity.x);
 
             // Adjust these values to change the shape of the triangle
-            int tipSize = 15; // Distance from center to tip
+            int tipSize = 6; // Distance from center to tip
             int baseSize = 8; // Distance from center to base corners
 
             // Calculate the points for a pointier triangle
@@ -73,10 +75,47 @@ public class FlockSimulation extends JPanel {
                     (int) (boid.position.y + Math.sin(angle + Math.PI + Math.PI / 6) * baseSize) // Base corner 2
             };
 
-            // Draw the triangle
-            g2d.setColor(Color.WHITE);
+            // Draw the debug boid in a different color
+            Color debugColor = new Color(0x1AB6E5);
+            Color standardColor = new Color(0x808080);
+            g2d.setColor(boid.isDebug ? debugColor : standardColor);
+
+            if (boid.isDebug)
+                drawDebugInfo(g2d, boid);
+
             g2d.fillPolygon(xPoints, yPoints, 3);
         }
+
+    }
+
+    /**
+     * Draws additional debug information for a debug boid, such as its vision
+     * cone
+     * 
+     * @param g2d         The Graphics2D object to draw with.
+     * @param specialBoid The special boid to draw debug information for.
+     */
+    private void drawDebugInfo(Graphics2D g2d, Boid specialBoid) {
+        // Some example debug info for now
+        float visionRadius = 50; // How far the boid can "see"
+        double visionAngle = 45; // Vision angle in degrees
+
+        // Calculate and draw vision cone (simplified example)
+        double angle = Math.atan2(specialBoid.velocity.y, specialBoid.velocity.x);
+        double leftAngle = angle - Math.toRadians(visionAngle / 2);
+        double rightAngle = angle + Math.toRadians(visionAngle / 2);
+
+        g2d.drawLine(
+                (int) specialBoid.position.x,
+                (int) specialBoid.position.y,
+                (int) (specialBoid.position.x + Math.cos(leftAngle) * visionRadius),
+                (int) (specialBoid.position.y + Math.sin(leftAngle) * visionRadius));
+
+        g2d.drawLine(
+                (int) specialBoid.position.x,
+                (int) specialBoid.position.y,
+                (int) (specialBoid.position.x + Math.cos(rightAngle) * visionRadius),
+                (int) (specialBoid.position.y + Math.sin(rightAngle) * visionRadius));
     }
 
     /**

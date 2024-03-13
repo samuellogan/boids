@@ -7,6 +7,9 @@
  * @author Samuel Logan <contact@samuellogan.dev>
  */
 public class Boid {
+    // One of the boids is set to be in "debug mode" to display its area of
+    // influence, field of view and other useful information
+    public boolean isDebug;
     // The position of the Boid in 2D space.
     Vector position;
     // The velocity of the Boid, determining its speed and direction.
@@ -25,9 +28,11 @@ public class Boid {
      * @param y The initial y-coordinate of the Boid's position.
      */
     public Boid(float x, float y) {
+        isDebug = false;
         position = new Vector(x, y);
         velocity = Vector.random2D();
         acceleration = new Vector(0, 0);
+        screenSize = new Vector(800, 600); // Assume a default screen size of 800x600 to avoid null pointer exceptions
     }
 
     /**
