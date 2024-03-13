@@ -51,18 +51,31 @@ public class FlockSimulation extends JPanel {
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        // Update and draw each boid
-
-        Dimension size = getSize(); // Get current panel size
+        Graphics2D g2d = (Graphics2D) g; // Cast to use Java2D features
         for (Boid boid : boids) {
-            boid.setScreenSize(size.width, size.height); // Pass current size to Boid
-            boid.update(); // Update the Boid's state
-            // Flocking rules can be applied within the Boid's update method or before
-            // drawing
+            boid.update();
+            // Convert the direction of velocity to an angle
+            double angle = Math.atan2(boid.velocity.y, boid.velocity.x);
 
-            // Draw the Boid as a white oval
-            g.setColor(Color.WHITE);
-            g.fillOval((int) boid.position.x, (int) boid.position.y, 5, 5);
+            // Adjust these values to change the shape of the triangle
+            int tipSize = 15; // Distance from center to tip
+            int baseSize = 8; // Distance from center to base corners
+
+            // Calculate the points for a pointier triangle
+            int[] xPoints = {
+                    (int) (boid.position.x + Math.cos(angle) * tipSize), // Tip
+                    (int) (boid.position.x + Math.cos(angle + Math.PI - Math.PI / 6) * baseSize), // Base corner 1
+                    (int) (boid.position.x + Math.cos(angle + Math.PI + Math.PI / 6) * baseSize) // Base corner 2
+            };
+            int[] yPoints = {
+                    (int) (boid.position.y + Math.sin(angle) * tipSize), // Tip
+                    (int) (boid.position.y + Math.sin(angle + Math.PI - Math.PI / 6) * baseSize), // Base corner 1
+                    (int) (boid.position.y + Math.sin(angle + Math.PI + Math.PI / 6) * baseSize) // Base corner 2
+            };
+
+            // Draw the triangle
+            g2d.setColor(Color.WHITE);
+            g2d.fillPolygon(xPoints, yPoints, 3);
         }
     }
 
