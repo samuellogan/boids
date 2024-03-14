@@ -2,9 +2,9 @@ package ui;
 
 import javax.swing.*;
 
+import simulation.FlockSimulation;
 import models.Parameter;
 import models.ParameterGroup;
-import simulation.FlockSimulation;
 
 import java.awt.*;
 import java.util.Hashtable;

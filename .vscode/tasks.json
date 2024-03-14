@@ -1,0 +1,37 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Compile Java",
+            "type": "shell",
+            "command": "javac",
+            "args": [
+                "-d",
+                "bin",
+                "-sourcepath",
+                "src",
+                "src/simulation/FlockSimulation.java"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": "$javac"
+        },
+        {
+            "label": "Create JAR",
+            "type": "shell",
+            "command": "jar",
+            "args": [
+                "cfm",
+                "Boids.jar",
+                "manifest.txt",
+                "-C",
+                "bin",
+                "."
+            ],
+            "dependsOn": "Compile Java",
+            "problemMatcher": []
+        }
+    ]
+}
