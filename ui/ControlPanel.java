@@ -1,4 +1,10 @@
+package ui;
+
 import javax.swing.*;
+
+import models.Parameter;
+import simulation.FlockSimulation;
+
 import java.awt.*;
 import java.util.Hashtable;
 

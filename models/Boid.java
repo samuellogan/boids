@@ -1,4 +1,12 @@
+package models;
+
 import java.util.List;
+
+import behaviour.AlignmentBehaviour;
+import behaviour.AvoidanceBehaviour;
+import behaviour.BoidBehaviour;
+import behaviour.CohesionBehaviour;
+import util.Vector;
 
 /**
  * Represents a Boid, an autonomous agent designed to simulate behaviors such as
@@ -11,10 +19,10 @@ import java.util.List;
 public class Boid {
     private boolean isDebug = false;
 
-    protected Vector position;
-    protected Vector velocity;
-    protected Vector acceleration;
-    protected Vector screenSize;
+    public Vector position;
+    public Vector velocity;
+    public Vector acceleration;
+    public Vector screenSize;
 
     private float protectedRange = 40.0f;
     private float protectedFOV = 270.0f;

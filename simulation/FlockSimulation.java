@@ -1,4 +1,10 @@
+package simulation;
+
 import javax.swing.*;
+
+import models.Boid;
+import ui.ControlPanel;
+
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;

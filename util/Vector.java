@@ -1,3 +1,5 @@
+package util;
+
 /**
  * A 2D vector class for representing and manipulating x,y coordinates in a 2D
  * space. This class provides basic vector operations such as addition,
@@ -6,9 +8,7 @@
  * @author Samuel Logan <contact@samuellogan.dev>
  */
 public class Vector {
-    // The x component of the vector
     public float x;
-    // The y component of the vector
     public float y;
 
     /**
@@ -134,6 +134,28 @@ public class Vector {
     }
 
     /**
+     * Calculates the dot product of this vector with another vector.
+     * 
+     * @param v The other vector to calculate the dot product with.
+     * @return The dot product of this vector and the other vector.
+     */
+    public float dot(Vector v) {
+        return this.x * v.x + this.y * v.y;
+    }
+
+    /**
+     * Adds a dot product method to calculate the dot product of two vectors.
+     * This is a static method that can be called without an instance of Vector.
+     *
+     * @param v1 The first vector.
+     * @param v2 The second vector.
+     * @return The dot product of the two vectors.
+     */
+    public static float dot(Vector v1, Vector v2) {
+        return v1.x * v2.x + v1.y * v2.y;
+    }
+
+    /**
      * Calculates the distance between two vectors.
      *
      * @param v1 The first vector.
@@ -184,27 +206,5 @@ public class Vector {
         // Ensure the cosine value is within -1 and 1 to avoid NaN from acos()
         cosineAngle = Math.max(-1, Math.min(1, cosineAngle));
         return (float) Math.acos(cosineAngle);
-    }
-
-    /**
-     * Calculates the dot product of this vector with another vector.
-     * 
-     * @param v The other vector to calculate the dot product with.
-     * @return The dot product of this vector and the other vector.
-     */
-    public float dot(Vector v) {
-        return this.x * v.x + this.y * v.y;
-    }
-
-    /**
-     * Adds a dot product method to calculate the dot product of two vectors.
-     * This is a static method that can be called without an instance of Vector.
-     *
-     * @param v1 The first vector.
-     * @param v2 The second vector.
-     * @return The dot product of the two vectors.
-     */
-    public static float dot(Vector v1, Vector v2) {
-        return v1.x * v2.x + v1.y * v2.y;
     }
 }

@@ -1,4 +1,9 @@
+package behaviour;
+
 import java.util.List;
+
+import models.Boid;
+import util.Vector;
 
 public class CohesionBehaviour implements BoidBehaviour {
 

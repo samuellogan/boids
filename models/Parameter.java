@@ -1,6 +1,10 @@
+package models;
+
 import java.util.function.BiConsumer;
 
-class Parameter {
+import simulation.FlockSimulation;
+
+public class Parameter {
     private String name;
     private String description;
     private int minValue;

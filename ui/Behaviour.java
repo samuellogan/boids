@@ -1,4 +1,8 @@
+package ui;
+
 import java.util.List;
+
+import models.Parameter;
 
 public enum Behaviour {
     AVOIDANCE(
