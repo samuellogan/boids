@@ -9,25 +9,27 @@ import java.util.List;
  * @author Samuel Logan <contact@samuellogan.dev>
  */
 public class Boid {
-    // One of the boids is set to be in "debug mode" to display its area of
-    // influence, field of view and other useful information
-    public boolean isDebug;
-    // The position of the Boid in 2D space.
-    Vector position;
-    // The velocity of the Boid, determining its speed and direction.
-    Vector velocity;
-    // The acceleration of the Boid, influencing its change in velocity.
-    Vector acceleration;
-    // The size of the screen, used to wrap Boids around the borders.
-    Vector screenSize;
+    private boolean isDebug = false;
 
-    // Field of View (FoV) angle in radians (e.g., PI/2 for 90 degrees)
-    float fov = (float) Math.PI / 2;
-    // Area of influence (radius within which it reacts to other boids)
-    float areaOfInfluence = 50;
+    protected Vector position;
+    protected Vector velocity;
+    protected Vector acceleration;
+    protected Vector screenSize;
 
-    float desiredVelocity;
-    float maxSteerForce;
+    private float protectedRange = 40.0f;
+    private float protectedFOV = 270.0f;
+    private float protectedAvoidFactor = 0.1f;
+    private float alignmentRange = 50.0f;
+    private float matchingFactor = 0.05f;
+    private float cohesionRange = 50.0f;
+    private float centeringFactor = 0.05f;
+
+    private BoidBehaviour avoidanceBehavior;
+    private BoidBehaviour alignmentBehavior;
+    private BoidBehaviour cohesionBehavior;
+
+    private float minSpeed = 2.0f;
+    private float maxSpeed = 4.0f;
 
     /**
      * Constructs a Boid given an initial position. The Boid's velocity is
@@ -38,11 +40,14 @@ public class Boid {
      * @param y The initial y-coordinate of the Boid's position.
      */
     public Boid(float x, float y) {
-        isDebug = false;
         position = new Vector(x, y);
         velocity = Vector.random2D();
         acceleration = new Vector(0, 0);
-        screenSize = new Vector(800, 600); // Assume a default screen size of 800x600 to avoid null pointer exceptions
+        screenSize = new Vector(800, 600);
+
+        avoidanceBehavior = new AvoidanceBehaviour(protectedAvoidFactor, protectedRange, protectedFOV);
+        alignmentBehavior = new AlignmentBehaviour(alignmentRange, matchingFactor);
+        cohesionBehavior = new CohesionBehaviour(cohesionRange, centeringFactor);
     }
 
     /**
@@ -51,11 +56,9 @@ public class Boid {
      * that the Boid wraps around the screen borders, creating a toroidal space.
      */
     public void update(List<Boid> boids) {
-        Vector avoidForce = avoidOthers(boids);
-        acceleration.add(avoidForce);
-
-        // Apply alignment behavior
-        align(boids);
+        avoidanceBehavior.applyBehavior(this, boids);
+        alignmentBehavior.applyBehavior(this, boids);
+        cohesionBehavior.applyBehavior(this, boids);
 
         // Calculate new velocity based on current acceleration
         Vector newVelocity = new Vector(velocity.x, velocity.y);
@@ -67,11 +70,14 @@ public class Boid {
             newVelocity.multiply(velocity.magnitude()); // Maintain original speed
         }
 
-        velocity = newVelocity; // Apply the adjusted velocity
-        position.add(velocity); // Update position based on the adjusted velocity
+        // Apply the adjusted velocity and update the position
+        velocity = newVelocity;
+        position.add(velocity);
 
-        wrapAroundBorders(); // Handle screen wrapping
-        acceleration.multiply(0); // Reset acceleration after each update
+        velocity.limit(minSpeed, maxSpeed);
+
+        wrapAroundBorders();
+        acceleration.multiply(0);
     }
 
     /**
@@ -94,67 +100,6 @@ public class Boid {
             position.y -= screenSize.y;
     }
 
-    private Vector avoidOthers(List<Boid> boids) {
-        Vector steer = new Vector(0, 0);
-        int count = 0;
-
-        for (Boid other : boids) {
-            float distance = Vector.dist(this.position, other.position);
-            float angle = Vector.angleBetween(this.velocity, Vector.sub(other.position, this.position));
-
-            if (other != this && distance < areaOfInfluence && angle < fov) {
-                Vector diff = Vector.sub(this.position, other.position);
-                diff.normalize();
-                // Instead of dividing by distance, consider using a different approach to
-                // ensure smooth steering
-                diff.multiply(1 / distance); // This emphasizes changing direction more smoothly
-                steer.add(diff);
-                count++;
-            }
-        }
-
-        if (count > 0) {
-            steer.divide((float) count);
-        }
-
-        if (steer.magnitude() > 0) {
-            // Apply the steering force more as a directional change rather than directly
-            // affecting speed
-            steer.normalize();
-            steer.multiply(maxSteerForce); // Use maxSteerForce to adjust the steer vector
-        }
-
-        return steer;
-    }
-
-    public void align(List<Boid> boids) {
-        Vector sum = new Vector(0, 0); // Initialize sum of velocities
-        int count = 0; // Initialize count of nearby boids
-
-        // Iterate through all boids
-        for (Boid other : boids) {
-            float distance = Vector.dist(this.position, other.position);
-            float angle = Vector.angleBetween(this.velocity, Vector.sub(other.position, this.position));
-
-            // Check if the other boid is within the circle of influence and field of view
-            if (other != this && distance < areaOfInfluence && angle < fov) {
-                sum.add(other.velocity); // Add velocity to sum
-                count++; // Increment count of nearby boids
-            }
-        }
-
-        if (count > 0) {
-            // Calculate the average velocity
-            sum.divide((float) count);
-
-            // Limit the change in velocity to a maximum rate
-            sum.limit(maxSteerForce);
-
-            // Apply the alignment force to adjust the velocity
-            acceleration.add(sum);
-        }
-    }
-
     /**
      * Sets the size of the screen for the Boid to use when wrapping around the
      * edges.
@@ -167,43 +112,112 @@ public class Boid {
     }
 
     /**
-     * Sets the area of influence for the Boid, which determines the radius within
-     * which it reacts to other Boids.
+     * Sets the range for the Boid's protected area, which is used by the avoidance
+     * behavior to steer away from other Boids within this range
      * 
-     * @param areaOfInfluence The new area of influence for the Boid.
+     * @param range The range of the protected area.
      */
-    public void setAreaOfInfluence(float areaOfInfluence) {
-        this.areaOfInfluence = areaOfInfluence;
+    public void setProtectedRange(float range) {
+        protectedRange = range;
+        avoidanceBehavior = new AvoidanceBehaviour(protectedAvoidFactor, protectedRange, protectedFOV);
     }
 
     /**
-     * Sets the field of view for the Boid, which determines the angle within which
-     * it reacts to other Boids.
+     * Sets the field of view for the Boid's protected area, which is used by the
+     * avoidance behavior to steer away from other Boids within this field of view
      * 
-     * @param fov The new field of view for the Boid in radians.
+     * @param fov The field of view of the protected area.
      */
-    public void setFieldOfView(float fov) {
-        this.fov = fov;
+    public void setProtectedFOV(float fov) {
+        protectedFOV = fov;
+        avoidanceBehavior = new AvoidanceBehaviour(protectedAvoidFactor, protectedRange, protectedFOV);
     }
 
     /**
-     * Sets the desired velocity for the Boid, which determines the speed at which
-     * it
-     * steers.
+     * Sets the strength of the steering force for the avoidance behavior.
      * 
-     * @param desiredVelocity The new desired velocity for the Boid.
+     * @param strength The strength of the steering force.
      */
-    public void setDesiredVelocity(float desiredVelocity) {
-        this.desiredVelocity = desiredVelocity;
+    public void setProtectedAvoidFactor(float factor) {
+        protectedAvoidFactor = factor;
+        avoidanceBehavior = new AvoidanceBehaviour(protectedAvoidFactor, protectedRange, protectedFOV);
     }
 
     /**
-     * Sets the maximum steering force for the Boid, which determines the maximum
-     * force it can apply to steer.
+     * Sets the range for the Boid's alignment area, which is used by the alignment
+     * behavior to match the direction of other Boids within this range.
      * 
-     * @param maxSteerForce The new maximum steering force for the Boid.
+     * @param range The range of the visible area.
      */
-    public void setMaxSteerForce(float maxSteerForce) {
-        this.maxSteerForce = maxSteerForce;
+    public void setAlignmentRange(float range) {
+        alignmentRange = range;
+        alignmentBehavior = new AlignmentBehaviour(alignmentRange, matchingFactor);
+    }
+
+    /**
+     * Sets the strength of the steering force for the alignment behavior.
+     * 
+     * @param factor
+     */
+    public void setCenteringFactor(float factor) {
+        centeringFactor = factor;
+        cohesionBehavior = new CohesionBehaviour(cohesionRange, centeringFactor);
+    }
+
+    /**
+     * Sets the strength of the steering force for the alignment behavior.
+     * 
+     * @param strength The strength of the steering force.
+     */
+    public void setCohesionRange(float range) {
+        cohesionRange = range;
+        cohesionBehavior = new CohesionBehaviour(cohesionRange, centeringFactor);
+    }
+
+    /**
+     * Sets the strength of the steering force for the cohesion behavior.
+     * 
+     * @param strength The strength of the steering force.
+     */
+    public void setMatchingFactor(float factor) {
+        centeringFactor = factor;
+        cohesionBehavior = new CohesionBehaviour(cohesionRange, centeringFactor);
+    }
+
+    /**
+     * Sets the minimum speed for the Boid.
+     * 
+     * @param minSpeed The minimum speed of the Boid.
+     */
+    public void setMinSpeed(float minSpeed) {
+        this.minSpeed = minSpeed;
+    }
+
+    /**
+     * Sets the maximum speed for the Boid.
+     * 
+     * @param maxSpeed The maximum speed of the Boid.
+     */
+    public void setMaxSpeed(float maxSpeed) {
+        this.maxSpeed = maxSpeed;
+    }
+
+    /**
+     * Sets the debug mode for the Boid. When debug mode is enabled, the Boid will
+     * display additional information, such as its protected area and field of view.
+     * 
+     * @param isDebug Whether to enable debug mode.
+     */
+    public void setDebug(boolean isDebug) {
+        this.isDebug = isDebug;
+    }
+
+    /**
+     * Gets the debug mode for the Boid.
+     * 
+     * @return Whether debug mode is enabled.
+     */
+    public boolean isDebug() {
+        return isDebug;
     }
 }

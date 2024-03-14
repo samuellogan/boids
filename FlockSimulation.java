@@ -2,8 +2,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.awt.geom.Arc2D;
-import java.awt.geom.GeneralPath;
 
 /**
  * A JPanel-based class that simulates flocking behavior using Boid objects.
@@ -20,9 +18,13 @@ public class FlockSimulation extends JPanel {
     // List of all Boids in the simulation
     List<Boid> boids = new ArrayList<>();
 
-    float areaOfInfluence = 50.0f;
-    int fieldOfView = 90;
-    float desiredVelocity = 1.0f;
+    float protectedRange = 40.0f;
+    float alignmentRange = 50.0f;
+    float cohesionRange = 50.0f;
+    float protectedFOV = 270.0f;
+
+    float maxSpeed = 2.0f;
+    float minSpeed = 4.0f;
 
     /**
      * Constructs the FlockSimulation panel, initializes the simulation environment,
@@ -37,13 +39,13 @@ public class FlockSimulation extends JPanel {
         setBackground(backgroundColor);
 
         // Setup the timer for regular updates
-        timer = new Timer(16, e -> repaint()); // Approx. 60 FPS
+        timer = new Timer(16, e -> repaint());
 
         // Initialize boids with random positions within the panel's bounds
         for (int i = 0; i < 100; i++) {
             boids.add(new Boid((float) Math.random() * 800, (float) Math.random() * 600));
         }
-        boids.get(0).isDebug = true; // Set the first boid to debug mode
+        boids.get(0).setDebug(true); // Set the first boid to debug mode
 
         // Start the simulation
         timer.start();
@@ -84,60 +86,68 @@ public class FlockSimulation extends JPanel {
             // Draw the debug boid in a different color
             Color debugColor = new Color(0x1AB6E5);
             Color standardColor = new Color(0x808080);
-            g2d.setColor(boid.isDebug ? debugColor : standardColor);
-
-            if (boid.isDebug)
-                drawDebugInfo(g2d, boid);
+            g2d.setColor(boid.isDebug() ? debugColor : standardColor);
 
             g2d.fillPolygon(xPoints, yPoints, 3);
-        }
 
+            if (boid.isDebug())
+                drawDebugInfo(g2d, boid);
+        }
     }
 
     /**
      * Draws additional debug information for a debug boid, such as its vision
      * cone
      * 
-     * @param g2d         The Graphics2D object to draw with.
-     * @param specialBoid The special boid to draw debug information for.
+     * @param g2d       The Graphics2D object to draw with.
+     * @param debugBoid The boid to draw debug information for.
      */
-    private void drawDebugInfo(Graphics2D g2d, Boid specialBoid) {
-        // Calculate the boid's direction in degrees
-        double directionInRadians = Math.atan2(specialBoid.velocity.y, specialBoid.velocity.x);
+    private void drawDebugInfo(Graphics2D g2d, Boid debugBoid) {
+        drawFieldOfView(g2d, debugBoid, Color.RED, protectedRange, protectedFOV);
+        drawFieldOfView(g2d, debugBoid, Color.BLUE, cohesionRange, 360);
+        drawFieldOfView(g2d, debugBoid, Color.GREEN, alignmentRange, 360);
+    }
+
+    private void drawFieldOfView(Graphics2D g2d, Boid debugBoid, Color color, float areaOfInfluence,
+            float fieldOfViewAngle) {
+        // Calculate the boid's direction in radians and degrees
+        double directionInRadians = Math.atan2(debugBoid.velocity.y, debugBoid.velocity.x);
         double directionInDegrees = Math.toDegrees(directionInRadians);
 
         // Calculate the start angle for the arc
-        int startAngle = (int) (360 - (directionInDegrees + fieldOfView / 2));
+        int startAngle = (int) (360 - (directionInDegrees + fieldOfViewAngle / 2));
 
         // Set drawing properties
-        g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.5f));
+        g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.2f));
 
         // Calculate left and right angles of field of view
-        int leftAngleDeg = (int) (directionInDegrees - (fieldOfView / 2));
-        int rightAngleDeg = (int) (directionInDegrees + (fieldOfView / 2));
+        int leftAngleDeg = (int) (directionInDegrees - (fieldOfViewAngle / 2));
+        int rightAngleDeg = (int) (directionInDegrees + (fieldOfViewAngle / 2));
 
         // Convert angles to radians
         double leftAngleRad = Math.toRadians(leftAngleDeg);
         double rightAngleRad = Math.toRadians(rightAngleDeg);
 
         // Draw lines for FOV edges without an outline
-        drawLineToFOV(g2d, specialBoid, leftAngleRad);
-        drawLineToFOV(g2d, specialBoid, rightAngleRad);
+        drawLineToFOV(g2d, debugBoid, leftAngleRad, color, areaOfInfluence);
+        drawLineToFOV(g2d, debugBoid, rightAngleRad, color, areaOfInfluence);
 
         // Fill the FoV arc with 50% transparency
-        int x = (int) (specialBoid.position.x - areaOfInfluence);
-        int y = (int) (specialBoid.position.y - areaOfInfluence);
+        int x = (int) (debugBoid.position.x - areaOfInfluence);
+        int y = (int) (debugBoid.position.y - areaOfInfluence);
         int diameter = (int) (2 * areaOfInfluence);
-        g2d.fillArc(x, y, diameter, diameter, startAngle, fieldOfView);
+        g2d.setColor(color);
+        g2d.fillArc(x, y, diameter, diameter, startAngle, (int) fieldOfViewAngle);
 
         // Reset transparency
         g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1.0f));
     }
 
     // Helper method to draw line to FOV edge without an outline
-    private void drawLineToFOV(Graphics2D g2d, Boid specialBoid, double angleRad) {
+    private void drawLineToFOV(Graphics2D g2d, Boid specialBoid, double angleRad, Color color, float areaOfInfluence) {
         Stroke previousStroke = g2d.getStroke();
-        g2d.setStroke(new BasicStroke(0)); // Set transparent stroke
+        g2d.setStroke(new BasicStroke(1)); // Set stroke width for the lines
+        g2d.setColor(color);
         g2d.drawLine(
                 (int) specialBoid.position.x,
                 (int) specialBoid.position.y,
@@ -165,30 +175,63 @@ public class FlockSimulation extends JPanel {
         });
     }
 
-    public void setAreaOfInfluence(float areaOfInfluence) {
-        this.areaOfInfluence = areaOfInfluence;
+    public void setProtectedRange(float protectedRange) {
+        this.protectedRange = protectedRange;
         for (Boid boid : boids) {
-            boid.setAreaOfInfluence(areaOfInfluence);
+            boid.setProtectedRange(protectedRange);
         }
     }
 
-    public void setFieldOfView(int fieldOfView) {
-        this.fieldOfView = fieldOfView;
+    public void setProtectedFOV(float protectedFOV) {
+        this.protectedFOV = protectedFOV;
         for (Boid boid : boids) {
-            boid.setFieldOfView(fieldOfView);
+            boid.setProtectedFOV(protectedFOV);
         }
     }
 
-    public void setDesiredVelocity(float desiredVelocity) {
-        this.desiredVelocity = desiredVelocity;
+    public void setProtectedAvoidFactor(float protectedAvoidFactor) {
         for (Boid boid : boids) {
-            boid.setDesiredVelocity(desiredVelocity);
+            boid.setProtectedAvoidFactor(protectedAvoidFactor);
         }
     }
 
-    public void setMaxSteerForce(float maxSteerForce) {
+    public void setMatchingFactor(float matchingFactor) {
         for (Boid boid : boids) {
-            boid.setMaxSteerForce(maxSteerForce);
+            boid.setMatchingFactor(matchingFactor);
+        }
+    }
+
+    public void setAlignmentRange(float alignmentRange) {
+        this.alignmentRange = alignmentRange;
+        for (Boid boid : boids) {
+            boid.setAlignmentRange(alignmentRange);
+        }
+    }
+
+    public void setCenteringFactor(float centeringFactor) {
+        for (Boid boid : boids) {
+            boid.setCenteringFactor(centeringFactor);
+        }
+    }
+
+    public void setCohesionRange(float cohesionRange) {
+        this.cohesionRange = cohesionRange;
+        for (Boid boid : boids) {
+            boid.setCohesionRange(cohesionRange);
+        }
+    }
+
+    public void setMinSpeed(float minSpeed) {
+        this.minSpeed = minSpeed;
+        for (Boid boid : boids) {
+            boid.setMinSpeed(minSpeed);
+        }
+    }
+
+    public void setMaxSpeed(float maxSpeed) {
+        this.maxSpeed = maxSpeed;
+        for (Boid boid : boids) {
+            boid.setMaxSpeed(maxSpeed);
         }
     }
 }
