@@ -9,15 +9,15 @@ import util.Vector;
 
 public class CohesionBehaviour implements BoidBehaviour {
 
-    private static Parameter<Float> rangeParam;
-    private static Parameter<Float> factorParam;
-    private static ParameterGroup<Float> parameters;
+    private static Parameter rangeParam;
+    private static Parameter factorParam;
+    private static ParameterGroup parameters;
 
     static {
-        parameters = new ParameterGroup<>("Cohesion");
+        parameters = new ParameterGroup("Cohesion");
 
         // Initialize parameters and add them to the group
-        rangeParam = new Parameter<>(
+        rangeParam = new Parameter(
                 "Cohesion",
                 "Cohesion Range",
                 "Controls the perception range for alignment",
@@ -26,13 +26,13 @@ public class CohesionBehaviour implements BoidBehaviour {
                 100.0f);
         parameters.addParameter(rangeParam);
 
-        factorParam = new Parameter<>(
+        factorParam = new Parameter(
                 "Cohesion",
                 "Cohesion Factor",
                 "Controls the strength of cohesion behavior",
                 0.0f,
-                0.5f,
-                1.0f);
+                0.025f,
+                0.05f);
         parameters.addParameter(factorParam);
     }
 
@@ -74,7 +74,7 @@ public class CohesionBehaviour implements BoidBehaviour {
      * 
      * @return the alignment parameters
      */
-    public static ParameterGroup<Float> getParameters() {
+    public static ParameterGroup getParameters() {
         return parameters;
     }
 
@@ -82,7 +82,15 @@ public class CohesionBehaviour implements BoidBehaviour {
         rangeParam.setValue(range);
     }
 
+    public static float getRange() {
+        return rangeParam.getValue();
+    }
+
     public static void setFactor(float factor) {
         factorParam.setValue(factor);
+    }
+
+    public static float getFactor() {
+        return factorParam.getValue();
     }
 }

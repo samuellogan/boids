@@ -8,16 +8,15 @@ import models.ParameterGroup;
 import util.Vector;
 
 public class AvoidanceBehaviour implements BoidBehaviour {
-
-    private static Parameter<Float> factorParam;
-    private static Parameter<Float> rangeParam;
-    private static Parameter<Float> fovParam;
-    private static ParameterGroup<Float> parameters;
+    private static Parameter factorParam;
+    private static Parameter rangeParam;
+    private static Parameter fovParam;
+    private static ParameterGroup parameters;
 
     static {
-        parameters = new ParameterGroup<>("Avoidance");
+        parameters = new ParameterGroup("Avoidance");
 
-        rangeParam = new Parameter<>(
+        rangeParam = new Parameter(
                 "Avoidance",
                 "Avoidance Range",
                 "Controls the perception range for avoidance",
@@ -26,16 +25,16 @@ public class AvoidanceBehaviour implements BoidBehaviour {
                 100.0f);
         parameters.addParameter(rangeParam);
 
-        factorParam = new Parameter<>(
+        factorParam = new Parameter(
                 "Avoidance",
                 "Avoidance Factor",
                 "Controls the strength of avoidance behavior",
                 0.0f,
-                0.5f,
-                1.0f);
+                0.1f,
+                0.2f);
         parameters.addParameter(factorParam);
 
-        fovParam = new Parameter<>(
+        fovParam = new Parameter(
                 "Avoidance",
                 "Avoidance FOV",
                 "Controls the field of view for avoidance behavior",
@@ -94,7 +93,7 @@ public class AvoidanceBehaviour implements BoidBehaviour {
      * 
      * @return the alignment parameters
      */
-    public static ParameterGroup<Float> getParameters() {
+    public static ParameterGroup getParameters() {
         return parameters;
     }
 
@@ -102,11 +101,23 @@ public class AvoidanceBehaviour implements BoidBehaviour {
         AvoidanceBehaviour.factorParam.setValue(factor);
     }
 
+    public static float getFactor() {
+        return AvoidanceBehaviour.factorParam.getValue();
+    }
+
     public static void setRange(float range) {
         AvoidanceBehaviour.rangeParam.setValue(range);
     }
 
+    public static float getRange() {
+        return AvoidanceBehaviour.rangeParam.getValue();
+    }
+
     public static void setFOV(float fov) {
         AvoidanceBehaviour.fovParam.setValue(fov);
+    }
+
+    public static float getFOV() {
+        return AvoidanceBehaviour.fovParam.getValue();
     }
 }

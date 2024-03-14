@@ -27,12 +27,7 @@ public class FlockSimulation extends JPanel {
     // List of all Boids in the simulation
     List<Boid> boids = new ArrayList<>();
     // List of parameter groups for the control panel
-    private List<ParameterGroup<Float>> parameterGroups;
-
-    float protectedRange = 40.0f;
-    float alignmentRange = 50.0f;
-    float cohesionRange = 50.0f;
-    float protectedFOV = 270.0f;
+    private List<ParameterGroup> parameterGroups;
 
     float maxSpeed = 2.0f;
     float minSpeed = 4.0f;
@@ -66,9 +61,9 @@ public class FlockSimulation extends JPanel {
     }
 
     private void initializeParameterGroups() {
-        ParameterGroup<Float> alignmentGroup = AlignmentBehaviour.getParameters();
-        ParameterGroup<Float> cohesionGroup = CohesionBehaviour.getParameters();
-        ParameterGroup<Float> avoidanceGroup = AvoidanceBehaviour.getParameters();
+        ParameterGroup alignmentGroup = AlignmentBehaviour.getParameters();
+        ParameterGroup cohesionGroup = CohesionBehaviour.getParameters();
+        ParameterGroup avoidanceGroup = AvoidanceBehaviour.getParameters();
 
         if (alignmentGroup != null)
             parameterGroups.add(alignmentGroup);
@@ -79,39 +74,21 @@ public class FlockSimulation extends JPanel {
     }
 
     // Getter for parameter groups to be used by the UI
-    public List<ParameterGroup<Float>> getParameterGroups() {
+    public List<ParameterGroup> getParameterGroups() {
         return parameterGroups;
     }
 
     // Method to update a parameter value
-    public void updateParameter(String parameterName, Float newValue) {
+    public void updateParameter(String parameterName, float newValue) {
         // Find the parameter and update its value only if it's different
-        for (ParameterGroup<Float> group : parameterGroups) {
-            for (Parameter<Float> parameter : group.getParameters().values()) {
-                if (parameter.getName().equals(parameterName) && !parameter.getValue().equals(newValue)) {
+        for (ParameterGroup group : parameterGroups) {
+            for (Parameter parameter : group.getParameters().values()) {
+                if (parameter.getName().equals(parameterName) && parameter.getValue() != newValue) {
                     parameter.setValue(newValue);
                     break; // Break out of the loop once the correct parameter is updated
                 }
             }
         }
-    }
-
-    private void applyParameterToSimulation(Parameter<Float> parameter) {
-        // This method would apply the parameter change to the actual simulation.
-        // It could update internal fields, adjust behavior weights, etc.
-        // For example:
-        switch (parameter.getCategory()) {
-            case "Alignment":
-                // Assume we have a method to set the alignment strength in the simulation
-                setAlignmentStrength(parameter.getValue().floatValue());
-                break;
-            // Add cases for other categories
-        }
-    }
-
-    // Example method that would be called when the alignment strength is updated
-    private void setAlignmentStrength(float strength) {
-        // Update the simulation's alignment behavior with the new strength
     }
 
     /**
@@ -166,9 +143,14 @@ public class FlockSimulation extends JPanel {
      * @param debugBoid The boid to draw debug information for.
      */
     private void drawDebugInfo(Graphics2D g2d, Boid debugBoid) {
-        drawFieldOfView(g2d, debugBoid, Color.RED, protectedRange, protectedFOV);
-        drawFieldOfView(g2d, debugBoid, Color.BLUE, cohesionRange, 360);
-        drawFieldOfView(g2d, debugBoid, Color.GREEN, alignmentRange, 360);
+        float avoidRange = AvoidanceBehaviour.getRange();
+        float avoidFOV = AvoidanceBehaviour.getFOV();
+        float cohereRange = CohesionBehaviour.getRange();
+        float alignRange = AlignmentBehaviour.getRange();
+
+        drawFieldOfView(g2d, debugBoid, Color.RED, avoidRange, avoidFOV);
+        drawFieldOfView(g2d, debugBoid, Color.BLUE, cohereRange, 360);
+        drawFieldOfView(g2d, debugBoid, Color.GREEN, alignRange, 360);
     }
 
     private void drawFieldOfView(Graphics2D g2d, Boid debugBoid, Color color, float areaOfInfluence,
@@ -236,51 +218,5 @@ public class FlockSimulation extends JPanel {
 
             new ControlPanel(simulation);
         });
-    }
-
-    public void setAvoidRange(float range) {
-        this.protectedRange = range;
-        AvoidanceBehaviour.setRange(range);
-    }
-
-    public void setAvoidFOV(float fov) {
-        this.protectedFOV = fov;
-        AvoidanceBehaviour.setFOV(fov);
-    }
-
-    public void setAvoidFactor(float factor) {
-        AvoidanceBehaviour.setFactor(factor);
-    }
-
-    public void setAlignFactor(float factor) {
-        AlignmentBehaviour.setFactor(factor);
-    }
-
-    public void setAlignRange(float range) {
-        this.alignmentRange = range;
-        AlignmentBehaviour.setRange(range);
-    }
-
-    public void setCohereFactor(float factor) {
-        CohesionBehaviour.setFactor(factor);
-    }
-
-    public void setCohereRange(float range) {
-        this.cohesionRange = range;
-        CohesionBehaviour.setRange(range);
-    }
-
-    public void setMinSpeed(float minSpeed) {
-        this.minSpeed = minSpeed;
-        for (Boid boid : boids) {
-            boid.setMinSpeed(minSpeed);
-        }
-    }
-
-    public void setMaxSpeed(float maxSpeed) {
-        this.maxSpeed = maxSpeed;
-        for (Boid boid : boids) {
-            boid.setMaxSpeed(maxSpeed);
-        }
     }
 }

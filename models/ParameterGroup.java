@@ -3,8 +3,8 @@ package models;
 import java.util.HashMap;
 import java.util.Map;
 
-public class ParameterGroup<T extends Float> {
-    private Map<String, Parameter<Float>> parameters;
+public class ParameterGroup {
+    private Map<String, Parameter> parameters;
     private String name;
 
     public ParameterGroup(String name) {
@@ -12,11 +12,11 @@ public class ParameterGroup<T extends Float> {
         this.parameters = new HashMap<>();
     }
 
-    public void addParameter(Parameter<Float> parameter) {
+    public void addParameter(Parameter parameter) {
         parameters.put(parameter.getName(), parameter);
     }
 
-    public Parameter<Float> getParameter(String name) {
+    public Parameter getParameter(String name) {
         return parameters.get(name);
     }
 
@@ -24,7 +24,7 @@ public class ParameterGroup<T extends Float> {
         return name;
     }
 
-    public Map<String, Parameter<Float>> getParameters() {
+    public Map<String, Parameter> getParameters() {
         return parameters;
     }
 }
