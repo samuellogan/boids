@@ -17,8 +17,6 @@ public class AlignmentBehaviour implements BoidBehaviour {
     private static ParameterGroup parameters;
 
     static {
-        isEnabled = true;
-
         parameters = new ParameterGroup("Alignment");
 
         // Initialize parameters and add them to the group

@@ -53,7 +53,7 @@ public class BiasBehaviour implements BoidBehaviour {
                 "Controls how strongly boids will be influenced by the bias",
                 0.0f,
                 0.05f,
-                0.1f);
+                1.0f);
         parameters.addParameter(strengthParam);
 
         radiusParam = new Parameter(
@@ -62,13 +62,10 @@ public class BiasBehaviour implements BoidBehaviour {
                 "Controls the radius of the target area around the bias position",
                 0.0f, // Min value
                 50.0f, // Default value, adjust based on your simulation's scale
-                100.0f); // Max value, adjust based on your simulation's scale
+                250.0f); // Max value, adjust based on your simulation's scale
         parameters.addParameter(radiusParam);
 
         isEnabled = true;
-    }
-
-    public BiasBehaviour() {
     }
 
     /**
@@ -77,19 +74,6 @@ public class BiasBehaviour implements BoidBehaviour {
      * @param boid  the boid to apply the behavior to
      * @param boids the list of boids in the simulation
      */
-
-    static {
-        // Initialize radius parameter
-        radiusParam = new Parameter(
-                "Bias",
-                "Radius",
-                "Controls the radius of the target area around the bias position",
-                0.0f, // Min value
-                50.0f, // Default value, adjust based on your simulation's scale
-                100.0f); // Max value, adjust based on your simulation's scale
-        parameters.addParameter(radiusParam);
-    }
-
     @Override
     public void applyBehavior(Boid boid, List<Boid> boids) {
         if (!isEnabled || !boid.isBiased())
@@ -113,8 +97,8 @@ public class BiasBehaviour implements BoidBehaviour {
             vectorToTargetY /= distanceToTarget;
 
             // Apply the bias by adjusting the boid's velocity towards the target area
-            boid.velocity.x += vectorToTargetX * strength;
-            boid.velocity.y += vectorToTargetY * strength;
+            boid.velocity.x += vectorToTargetX * strength / boid.velocity.magnitude();
+            boid.velocity.y += vectorToTargetY * strength / boid.velocity.magnitude();
         }
     }
 
@@ -173,5 +157,13 @@ public class BiasBehaviour implements BoidBehaviour {
 
     public static float getStrength() {
         return strengthParam.getValue();
+    }
+
+    public static void setRadius(float radius) {
+        radiusParam.setValue(radius);
+    }
+
+    public static float getRadius() {
+        return radiusParam.getValue();
     }
 }

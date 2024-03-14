@@ -19,33 +19,38 @@ public class ControlPanel extends JFrame {
     }
 
     private void initializeUI() {
-        try {
-            setTitle("Boid Simulation Parameters");
-            setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
+        setTitle("Boid Simulation Parameters");
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-            // Create the UI components for each parameter group
-            List<ParameterGroup> parameterGroups = simulation.getParameterGroups();
-            for (ParameterGroup group : parameterGroups) {
-                JPanel parameterPanel = new JPanel(new GridBagLayout());
-                GridBagConstraints gbc = new GridBagConstraints();
-                gbc.gridy = 0;
-                gbc.anchor = GridBagConstraints.NORTHWEST;
+        // Create a main panel with BoxLayout to hold the content and set padding via
+        // border
+        JPanel mainPanel = new JPanel();
+        mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
+        int padding = 10; // Adjust padding size as needed
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(padding, padding, padding, padding));
 
-                for (Parameter parameter : group.getParameters().values()) {
-                    parameterPanel.add(createParameterSlider(parameter), gbc);
-                    gbc.gridy++;
-                }
+        List<ParameterGroup> parameterGroups = simulation.getParameterGroups();
+        for (ParameterGroup group : parameterGroups) {
+            JPanel parameterPanel = new JPanel(new GridBagLayout());
+            GridBagConstraints gbc = new GridBagConstraints();
+            gbc.gridy = 0;
+            gbc.anchor = GridBagConstraints.NORTHWEST;
 
-                add(createSection(group.getName(), parameterPanel, group.getName()));
+            for (Parameter parameter : group.getParameters().values()) {
+                parameterPanel.add(createParameterSlider(parameter), gbc);
+                gbc.gridy++;
             }
 
-            pack();
-            setLocationRelativeTo(null);
-            setVisible(true);
-        } catch (Exception e) {
-            e.printStackTrace(); // Log the exception
+            // Instead of adding directly to the frame, add to the main panel
+            mainPanel.add(createSection(group.getName(), parameterPanel, group.getName()));
         }
+
+        // Finally, add the main panel to the frame's content pane
+        getContentPane().add(mainPanel);
+
+        pack();
+        setLocationRelativeTo(null);
+        setVisible(true);
     }
 
     // Method to create sliders for each parameter
@@ -55,24 +60,15 @@ public class ControlPanel extends JFrame {
         JPanel labelPanel = new JPanel();
         labelPanel.setLayout(new BoxLayout(labelPanel, BoxLayout.Y_AXIS));
 
-        JLabel nameLabel = new JLabel(parameter.getName());
-        nameLabel.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 10));
+        JLabel nameLabel = createLabel(parameter.getName(), Font.BOLD, 10);
+        JLabel descriptionLabel = createLabel(
+                "<html><body style='width: 150px'>" + parameter.getDescription() + "</body></html>", Font.PLAIN, 8);
 
-        // Add a top margin to the nameLabel
-        int topMargin = 5;
-        int leftMargin = 0;
-        int bottomMargin = 0;
-        int rightMargin = 0;
-        nameLabel.setBorder(BorderFactory.createEmptyBorder(topMargin, leftMargin, bottomMargin, rightMargin));
+        nameLabel.setBorder(BorderFactory.createEmptyBorder(5, 0, 0, 0));
 
         labelPanel.add(nameLabel);
-
-        JLabel descriptionLabel = new JLabel(
-                "<html><body style='width: 150px'>" + parameter.getDescription() + "</body></html>"); // Wrap text
-        descriptionLabel.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 8));
         labelPanel.add(descriptionLabel);
-
-        parameterPanel.add(labelPanel, BorderLayout.WEST); // Add label panel to the west of the parameter panel
+        parameterPanel.add(labelPanel, BorderLayout.WEST);
 
         float min = parameter.getMin();
         float max = parameter.getMax();
@@ -122,45 +118,65 @@ public class ControlPanel extends JFrame {
     }
 
     private JPanel createSection(String title, JPanel contentPanel, String behaviorName) {
-        JPanel sectionPanel = new JPanel();
-        sectionPanel.setLayout(new BorderLayout());
-        sectionPanel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createEmptyBorder(5, 5, 5, 5),
-                BorderFactory.createTitledBorder(title)));
+        JPanel sectionPanel = new JPanel(new BorderLayout());
 
-        // Create and configure the checkbox
-        JCheckBox behaviorEnableCheckbox = new JCheckBox("Enable");
-        behaviorEnableCheckbox.setSelected(FlockSimulation.isBehaviorEnabled(behaviorName));
-        behaviorEnableCheckbox.addActionListener(e -> FlockSimulation.toggleBehaviorEnabled(behaviorName,
-                behaviorEnableCheckbox.isSelected()));
-
-        JCheckBox behaviorDebugCheckbox = new JCheckBox("Debug");
-        behaviorDebugCheckbox.setSelected(FlockSimulation.isBehaviorDebugging(behaviorName));
-        behaviorDebugCheckbox.addActionListener(e -> FlockSimulation.toggleBehaviorDebugging(behaviorName,
-                behaviorDebugCheckbox.isSelected()));
-
-        Font currentFont = behaviorEnableCheckbox.getFont();
-        float smallerFontSize = currentFont.getSize() - 2.0f; // Decrease font size by 2
-        behaviorEnableCheckbox.setFont(currentFont.deriveFont(smallerFontSize));
-        behaviorDebugCheckbox.setFont(currentFont.deriveFont(smallerFontSize));
-
-        // Use GridBagLayout for precise control over the checkbox's placement
-        JPanel checkboxPanel = new JPanel(new GridBagLayout());
+        // Panel for the title and checkboxes, using GridBagLayout for precise control
+        JPanel topPanel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.anchor = GridBagConstraints.WEST; // Align the checkbox to the left
-        gbc.insets = new Insets(0, 0, 0, 0); // No margins around the checkbox
 
-        // Add the checkbox to the checkboxPanel with the constraints
-        checkboxPanel.add(behaviorEnableCheckbox, gbc);
-        checkboxPanel.add(behaviorDebugCheckbox, gbc);
+        // Configure the title label on the left
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1.0;
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.gridheight = 2; // Span across 2 rows for alignment with checkboxes
+        gbc.anchor = GridBagConstraints.WEST;
 
-        // Add the checkboxPanel to the sectionPanel, positioned at the top
-        sectionPanel.add(checkboxPanel, BorderLayout.NORTH);
+        JLabel titleLabel = new JLabel(title);
+        titleLabel.setFont(new Font(titleLabel.getFont().getName(), Font.BOLD, 20));
+        topPanel.add(titleLabel, gbc);
 
-        // Add the contentPanel to the sectionPanel, in the center
+        // Reset gridheight for checkboxes (though not strictly necessary for
+        // side-by-side layout)
+        gbc.gridheight = 1;
+
+        // Configure the "Enable" checkbox on the right
+        gbc.gridx = 1; // Position "Enable" checkbox in the second column
+        gbc.gridy = 0; // Both checkboxes in the first row
+        gbc.weightx = 0; // Do not let checkboxes expand horizontally
+        gbc.anchor = GridBagConstraints.EAST; // Align to the east side but within the same block
+
+        JCheckBox enableCheckbox = new JCheckBox("Enable", FlockSimulation.isBehaviorEnabled(behaviorName));
+        JCheckBox debugCheckbox = new JCheckBox("Debug", FlockSimulation.isBehaviorDebugging(behaviorName));
+
+        enableCheckbox.addActionListener(
+                e -> FlockSimulation.toggleBehaviorEnabled(behaviorName, enableCheckbox.isSelected()));
+        debugCheckbox.addActionListener(
+                e -> FlockSimulation.toggleBehaviorDebugging(behaviorName, debugCheckbox.isSelected()));
+
+        Font originalFont = enableCheckbox.getFont();
+        Font smallerFont = new Font(originalFont.getName(), originalFont.getStyle(), originalFont.getSize() - 2);
+
+        enableCheckbox.setFont(smallerFont);
+        debugCheckbox.setFont(smallerFont);
+
+        topPanel.add(debugCheckbox, gbc);
+        gbc.gridx = 2;
+        topPanel.add(enableCheckbox, gbc);
+
+        // Adding spacing and alignment adjustments if necessary
+        gbc.insets = new Insets(0, 5, 0, 5); // Add padding around components if needed
+
+        // Combine everything into the sectionPanel
+        sectionPanel.add(topPanel, BorderLayout.NORTH);
         sectionPanel.add(contentPanel, BorderLayout.CENTER);
 
         return sectionPanel;
     }
 
+    private JLabel createLabel(String text, int style, int size) {
+        JLabel label = new JLabel(text);
+        label.setFont(new Font(Font.SANS_SERIF, style, size));
+        return label;
+    }
 }

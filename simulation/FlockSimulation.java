@@ -158,6 +158,10 @@ public class FlockSimulation extends JPanel {
         float avoidFOV = AvoidanceBehaviour.getFOV();
         float cohereRange = CohesionBehaviour.getRange();
         float alignRange = AlignmentBehaviour.getRange();
+        float biasStrength = BiasBehaviour.getStrength();
+        float biasRange = BiasBehaviour.getRadius();
+        float biasXPosition = BiasBehaviour.getXPosition();
+        float biasYPosition = BiasBehaviour.getYPosition();
 
         if (AvoidanceBehaviour.isEnabled() && AvoidanceBehaviour.isDebugging())
             drawFieldOfView(g2d, debugBoid, Color.RED, avoidRange, avoidFOV);
@@ -167,6 +171,16 @@ public class FlockSimulation extends JPanel {
 
         if (AlignmentBehaviour.isEnabled() && AlignmentBehaviour.isDebugging())
             drawFieldOfView(g2d, debugBoid, Color.GREEN, alignRange, 360);
+
+        if (BiasBehaviour.isEnabled() && BiasBehaviour.isDebugging()) {
+            // Draw the bias areas color depending on the strength
+            float value = Math.min(Math.max(biasStrength, 0), 1.0f);
+            float normalizedValue = value / 1.0f;
+            int green = 255 - (int) (normalizedValue * 255);
+            Color color = new Color(255, green, 0);
+
+            drawBias(g2d, debugBoid, color, biasRange, biasXPosition, biasYPosition);
+        }
     }
 
     private void drawFieldOfView(Graphics2D g2d, Boid debugBoid, Color color, float areaOfInfluence,
@@ -179,7 +193,7 @@ public class FlockSimulation extends JPanel {
         int startAngle = (int) (360 - (directionInDegrees + fieldOfViewAngle / 2));
 
         // Set drawing properties
-        g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.075f));
+        g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.2f));
 
         // Calculate left and right angles of field of view
         int leftAngleDeg = (int) (directionInDegrees - (fieldOfViewAngle / 2));
@@ -202,6 +216,14 @@ public class FlockSimulation extends JPanel {
 
         // Reset transparency
         g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1.0f));
+    }
+
+    private void drawBias(Graphics2D g2d, Boid debugBoid, Color color, float areaOfInfluence, float biasXPosition,
+            float biasYPosition) {
+        g2d.setColor(color);
+        g2d.drawOval((int) ((biasXPosition * debugBoid.screenSize.x) - areaOfInfluence),
+                (int) ((biasYPosition * debugBoid.screenSize.y) - areaOfInfluence),
+                (int) (2 * areaOfInfluence), (int) (2 * areaOfInfluence));
     }
 
     // Helper method to draw line to FOV edge without an outline
