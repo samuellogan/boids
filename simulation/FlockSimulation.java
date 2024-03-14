@@ -3,6 +3,9 @@ package simulation;
 import javax.swing.*;
 
 import models.Boid;
+import behaviour.*;
+import models.Parameter;
+import models.ParameterGroup;
 import ui.ControlPanel;
 
 import java.awt.*;
@@ -23,6 +26,8 @@ public class FlockSimulation extends JPanel {
     Timer timer;
     // List of all Boids in the simulation
     List<Boid> boids = new ArrayList<>();
+    // List of parameter groups for the control panel
+    private List<ParameterGroup<Float>> parameterGroups;
 
     float protectedRange = 40.0f;
     float alignmentRange = 50.0f;
@@ -39,6 +44,9 @@ public class FlockSimulation extends JPanel {
      * sets up a timer to update the simulation at regular intervals.
      */
     public FlockSimulation() {
+        parameterGroups = new ArrayList<>();
+        initializeParameterGroups();
+
         // Set the size and background color of the simulation panel
         setPreferredSize(new Dimension(800, 600));
         Color backgroundColor = new Color(0x252628);
@@ -55,6 +63,55 @@ public class FlockSimulation extends JPanel {
 
         // Start the simulation
         timer.start();
+    }
+
+    private void initializeParameterGroups() {
+        ParameterGroup<Float> alignmentGroup = AlignmentBehaviour.getParameters();
+        ParameterGroup<Float> cohesionGroup = CohesionBehaviour.getParameters();
+        ParameterGroup<Float> avoidanceGroup = AvoidanceBehaviour.getParameters();
+
+        if (alignmentGroup != null)
+            parameterGroups.add(alignmentGroup);
+        if (cohesionGroup != null)
+            parameterGroups.add(cohesionGroup);
+        if (avoidanceGroup != null)
+            parameterGroups.add(avoidanceGroup);
+    }
+
+    // Getter for parameter groups to be used by the UI
+    public List<ParameterGroup<Float>> getParameterGroups() {
+        return parameterGroups;
+    }
+
+    // Method to update a parameter value
+    public void updateParameter(String parameterName, Float newValue) {
+        // Find the parameter and update its value only if it's different
+        for (ParameterGroup<Float> group : parameterGroups) {
+            for (Parameter<Float> parameter : group.getParameters().values()) {
+                if (parameter.getName().equals(parameterName) && !parameter.getValue().equals(newValue)) {
+                    parameter.setValue(newValue);
+                    break; // Break out of the loop once the correct parameter is updated
+                }
+            }
+        }
+    }
+
+    private void applyParameterToSimulation(Parameter<Float> parameter) {
+        // This method would apply the parameter change to the actual simulation.
+        // It could update internal fields, adjust behavior weights, etc.
+        // For example:
+        switch (parameter.getCategory()) {
+            case "Alignment":
+                // Assume we have a method to set the alignment strength in the simulation
+                setAlignmentStrength(parameter.getValue().floatValue());
+                break;
+            // Add cases for other categories
+        }
+    }
+
+    // Example method that would be called when the alignment strength is updated
+    private void setAlignmentStrength(float strength) {
+        // Update the simulation's alignment behavior with the new strength
     }
 
     /**
@@ -181,50 +238,36 @@ public class FlockSimulation extends JPanel {
         });
     }
 
-    public void setProtectedRange(float protectedRange) {
-        this.protectedRange = protectedRange;
-        for (Boid boid : boids) {
-            boid.setProtectedRange(protectedRange);
-        }
+    public void setAvoidRange(float range) {
+        this.protectedRange = range;
+        AvoidanceBehaviour.setRange(range);
     }
 
-    public void setProtectedFOV(float protectedFOV) {
-        this.protectedFOV = protectedFOV;
-        for (Boid boid : boids) {
-            boid.setProtectedFOV(protectedFOV);
-        }
+    public void setAvoidFOV(float fov) {
+        this.protectedFOV = fov;
+        AvoidanceBehaviour.setFOV(fov);
     }
 
-    public void setProtectedAvoidFactor(float protectedAvoidFactor) {
-        for (Boid boid : boids) {
-            boid.setProtectedAvoidFactor(protectedAvoidFactor);
-        }
+    public void setAvoidFactor(float factor) {
+        AvoidanceBehaviour.setFactor(factor);
     }
 
-    public void setMatchingFactor(float matchingFactor) {
-        for (Boid boid : boids) {
-            boid.setMatchingFactor(matchingFactor);
-        }
+    public void setAlignFactor(float factor) {
+        AlignmentBehaviour.setFactor(factor);
     }
 
-    public void setAlignmentRange(float alignmentRange) {
-        this.alignmentRange = alignmentRange;
-        for (Boid boid : boids) {
-            boid.setAlignmentRange(alignmentRange);
-        }
+    public void setAlignRange(float range) {
+        this.alignmentRange = range;
+        AlignmentBehaviour.setRange(range);
     }
 
-    public void setCenteringFactor(float centeringFactor) {
-        for (Boid boid : boids) {
-            boid.setCenteringFactor(centeringFactor);
-        }
+    public void setCohereFactor(float factor) {
+        CohesionBehaviour.setFactor(factor);
     }
 
-    public void setCohesionRange(float cohesionRange) {
-        this.cohesionRange = cohesionRange;
-        for (Boid boid : boids) {
-            boid.setCohesionRange(cohesionRange);
-        }
+    public void setCohereRange(float range) {
+        this.cohesionRange = range;
+        CohesionBehaviour.setRange(range);
     }
 
     public void setMinSpeed(float minSpeed) {

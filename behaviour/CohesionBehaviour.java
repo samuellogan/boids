@@ -3,20 +3,47 @@ package behaviour;
 import java.util.List;
 
 import models.Boid;
+import models.Parameter;
+import models.ParameterGroup;
 import util.Vector;
 
 public class CohesionBehaviour implements BoidBehaviour {
 
-    private final float visibleRange;
-    private final float centeringFactor;
+    private static Parameter<Float> rangeParam;
+    private static Parameter<Float> factorParam;
+    private static ParameterGroup<Float> parameters;
 
-    public CohesionBehaviour(float visibleRange, float centeringFactor) {
-        this.visibleRange = visibleRange;
-        this.centeringFactor = centeringFactor;
+    static {
+        parameters = new ParameterGroup<>("Cohesion");
+
+        // Initialize parameters and add them to the group
+        rangeParam = new Parameter<>(
+                "Cohesion",
+                "Cohesion Range",
+                "Controls the perception range for alignment",
+                0.0f,
+                50.0f,
+                100.0f);
+        parameters.addParameter(rangeParam);
+
+        factorParam = new Parameter<>(
+                "Cohesion",
+                "Cohesion Factor",
+                "Controls the strength of cohesion behavior",
+                0.0f,
+                0.5f,
+                1.0f);
+        parameters.addParameter(factorParam);
+    }
+
+    public CohesionBehaviour() {
     }
 
     @Override
     public void applyBehavior(Boid boid, List<Boid> boids) {
+        float range = rangeParam.getValue();
+        float factor = factorParam.getValue();
+
         float xposAvg = 0;
         float yposAvg = 0;
         int neighboringBoids = 0;
@@ -24,7 +51,7 @@ public class CohesionBehaviour implements BoidBehaviour {
         for (Boid otherBoid : boids) {
             if (boid != otherBoid) {
                 float distance = Vector.dist(boid.position, otherBoid.position);
-                if (distance < visibleRange) {
+                if (distance < range) {
                     xposAvg += otherBoid.position.x;
                     yposAvg += otherBoid.position.y;
                     neighboringBoids++;
@@ -37,8 +64,25 @@ public class CohesionBehaviour implements BoidBehaviour {
             yposAvg /= neighboringBoids;
 
             // Steer the boid towards the average position of its neighbors
-            boid.velocity.x += (xposAvg - boid.position.x) * centeringFactor;
-            boid.velocity.y += (yposAvg - boid.position.y) * centeringFactor;
+            boid.velocity.x += (xposAvg - boid.position.x) * factor;
+            boid.velocity.y += (yposAvg - boid.position.y) * factor;
         }
+    }
+
+    /**
+     * Method to get the alignment parameters
+     * 
+     * @return the alignment parameters
+     */
+    public static ParameterGroup<Float> getParameters() {
+        return parameters;
+    }
+
+    public static void setRange(float range) {
+        rangeParam.setValue(range);
+    }
+
+    public static void setFactor(float factor) {
+        factorParam.setValue(factor);
     }
 }

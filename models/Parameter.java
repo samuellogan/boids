@@ -1,87 +1,68 @@
 package models;
 
-import java.util.function.BiConsumer;
+import java.util.List;
+import java.util.ArrayList;
 
-import simulation.FlockSimulation;
-
-public class Parameter {
+public class Parameter<T extends Float> {
+    private String category;
     private String name;
     private String description;
-    private int minValue;
-    private int maxValue;
-    private int defaultValue;
-    private BiConsumer<Float, FlockSimulation> onUpdate; // Adjusted for BiConsumer
+    private T min;
+    private T max;
+    private T value;
+    private List<ParameterListener<T>> listeners = new ArrayList<>();
 
-    public Parameter(String name, String description, int minValue, int maxValue,
-            BiConsumer<Float, FlockSimulation> onUpdate) {
+    public Parameter(String category, String name, String description, T min, T defaultValue, T max) {
+        this.category = category;
         this.name = name;
         this.description = description;
-        this.minValue = minValue;
-        this.maxValue = maxValue;
-        this.defaultValue = (maxValue + minValue) / 2;
-        this.onUpdate = onUpdate;
+        this.min = min;
+        this.max = max;
+        this.value = defaultValue;
     }
 
-    public Parameter(String name, String description, int defaultValue, int minValue, int maxValue,
-            BiConsumer<Float, FlockSimulation> onUpdate) {
-        this.name = name;
-        this.description = description;
-        this.minValue = minValue;
-        this.maxValue = maxValue;
-        this.defaultValue = defaultValue;
-        this.onUpdate = onUpdate;
-    }
-
-    // Method to execute the parameter update, passing in the simulation reference
-    public void updateParameter(Float value, FlockSimulation simulation) {
-        onUpdate.accept(value, simulation);
+    public String getCategory() {
+        return category;
     }
 
     public String getName() {
         return name;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public T getValue() {
+        return value;
     }
 
     public String getDescription() {
         return description;
     }
 
-    public void setDescription(String description) {
-        this.description = description;
+    public T getMin() {
+        return min;
     }
 
-    public int getDefaultValue() {
-        return defaultValue;
+    public T getMax() {
+        return max;
     }
 
-    public void setDefaultValue(int defaultValue) {
-        this.defaultValue = defaultValue;
+    public void setValue(T value) {
+        if (value.floatValue() >= min.floatValue() && value.floatValue() <= max.floatValue()) {
+            this.value = value;
+            notifyListeners();
+        }
     }
 
-    public int getMinValue() {
-        return minValue;
+    public void addListener(ParameterListener<T> listener) {
+        listeners.add(listener);
     }
 
-    public void SetMinValue(int minValue) {
-        this.minValue = minValue;
+    private void notifyListeners() {
+        for (ParameterListener<T> listener : listeners) {
+            listener.onParameterChanged(this);
+        }
     }
 
-    public int getMaxValue() {
-        return maxValue;
-    }
-
-    public void SetMaxValue(int maxValue) {
-        this.maxValue = maxValue;
-    }
-
-    public BiConsumer<Float, FlockSimulation> getOnUpdate() {
-        return onUpdate;
-    }
-
-    public void setOnUpdate(BiConsumer<Float, FlockSimulation> onUpdate) {
-        this.onUpdate = onUpdate;
+    public interface ParameterListener<T extends Float> {
+        void onParameterChanged(Parameter<T> parameter);
     }
 }

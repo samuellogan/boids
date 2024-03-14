@@ -24,14 +24,6 @@ public class Boid {
     public Vector acceleration;
     public Vector screenSize;
 
-    private float protectedRange = 40.0f;
-    private float protectedFOV = 270.0f;
-    private float protectedAvoidFactor = 0.1f;
-    private float alignmentRange = 50.0f;
-    private float matchingFactor = 0.05f;
-    private float cohesionRange = 50.0f;
-    private float centeringFactor = 0.05f;
-
     private BoidBehaviour avoidanceBehavior;
     private BoidBehaviour alignmentBehavior;
     private BoidBehaviour cohesionBehavior;
@@ -53,9 +45,9 @@ public class Boid {
         acceleration = new Vector(0, 0);
         screenSize = new Vector(800, 600);
 
-        avoidanceBehavior = new AvoidanceBehaviour(protectedAvoidFactor, protectedRange, protectedFOV);
-        alignmentBehavior = new AlignmentBehaviour(alignmentRange, matchingFactor);
-        cohesionBehavior = new CohesionBehaviour(cohesionRange, centeringFactor);
+        avoidanceBehavior = new AvoidanceBehaviour();
+        alignmentBehavior = new AlignmentBehaviour();
+        cohesionBehavior = new CohesionBehaviour();
     }
 
     /**
@@ -117,79 +109,6 @@ public class Boid {
      */
     public void setScreenSize(float width, float height) {
         screenSize = new Vector(width, height);
-    }
-
-    /**
-     * Sets the range for the Boid's protected area, which is used by the avoidance
-     * behavior to steer away from other Boids within this range
-     * 
-     * @param range The range of the protected area.
-     */
-    public void setProtectedRange(float range) {
-        protectedRange = range;
-        avoidanceBehavior = new AvoidanceBehaviour(protectedAvoidFactor, protectedRange, protectedFOV);
-    }
-
-    /**
-     * Sets the field of view for the Boid's protected area, which is used by the
-     * avoidance behavior to steer away from other Boids within this field of view
-     * 
-     * @param fov The field of view of the protected area.
-     */
-    public void setProtectedFOV(float fov) {
-        protectedFOV = fov;
-        avoidanceBehavior = new AvoidanceBehaviour(protectedAvoidFactor, protectedRange, protectedFOV);
-    }
-
-    /**
-     * Sets the strength of the steering force for the avoidance behavior.
-     * 
-     * @param strength The strength of the steering force.
-     */
-    public void setProtectedAvoidFactor(float factor) {
-        protectedAvoidFactor = factor;
-        avoidanceBehavior = new AvoidanceBehaviour(protectedAvoidFactor, protectedRange, protectedFOV);
-    }
-
-    /**
-     * Sets the range for the Boid's alignment area, which is used by the alignment
-     * behavior to match the direction of other Boids within this range.
-     * 
-     * @param range The range of the visible area.
-     */
-    public void setAlignmentRange(float range) {
-        alignmentRange = range;
-        alignmentBehavior = new AlignmentBehaviour(alignmentRange, matchingFactor);
-    }
-
-    /**
-     * Sets the strength of the steering force for the alignment behavior.
-     * 
-     * @param factor
-     */
-    public void setCenteringFactor(float factor) {
-        centeringFactor = factor;
-        cohesionBehavior = new CohesionBehaviour(cohesionRange, centeringFactor);
-    }
-
-    /**
-     * Sets the strength of the steering force for the alignment behavior.
-     * 
-     * @param strength The strength of the steering force.
-     */
-    public void setCohesionRange(float range) {
-        cohesionRange = range;
-        cohesionBehavior = new CohesionBehaviour(cohesionRange, centeringFactor);
-    }
-
-    /**
-     * Sets the strength of the steering force for the cohesion behavior.
-     * 
-     * @param strength The strength of the steering force.
-     */
-    public void setMatchingFactor(float factor) {
-        centeringFactor = factor;
-        cohesionBehavior = new CohesionBehaviour(cohesionRange, centeringFactor);
     }
 
     /**
