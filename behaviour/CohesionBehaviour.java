@@ -19,7 +19,7 @@ public class CohesionBehaviour implements BoidBehaviour {
         // Initialize parameters and add them to the group
         rangeParam = new Parameter(
                 "Cohesion",
-                "Cohesion Range",
+                "Range",
                 "Controls the perception range for alignment",
                 0.0f,
                 50.0f,
@@ -28,8 +28,8 @@ public class CohesionBehaviour implements BoidBehaviour {
 
         factorParam = new Parameter(
                 "Cohesion",
-                "Cohesion Factor",
-                "Controls the strength of cohesion behavior",
+                "Factor",
+                "Controls the extent to which the boid steers towards the average position of its neighbors",
                 0.0f,
                 0.025f,
                 0.05f);

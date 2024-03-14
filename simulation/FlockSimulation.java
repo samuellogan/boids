@@ -163,7 +163,7 @@ public class FlockSimulation extends JPanel {
         int startAngle = (int) (360 - (directionInDegrees + fieldOfViewAngle / 2));
 
         // Set drawing properties
-        g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.2f));
+        g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.075f));
 
         // Calculate left and right angles of field of view
         int leftAngleDeg = (int) (directionInDegrees - (fieldOfViewAngle / 2));
@@ -177,7 +177,7 @@ public class FlockSimulation extends JPanel {
         drawLineToFOV(g2d, debugBoid, leftAngleRad, color, areaOfInfluence);
         drawLineToFOV(g2d, debugBoid, rightAngleRad, color, areaOfInfluence);
 
-        // Fill the FoV arc with 50% transparency
+        // Fill the FoV arc
         int x = (int) (debugBoid.position.x - areaOfInfluence);
         int y = (int) (debugBoid.position.y - areaOfInfluence);
         int diameter = (int) (2 * areaOfInfluence);

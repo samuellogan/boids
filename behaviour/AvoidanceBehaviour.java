@@ -18,7 +18,7 @@ public class AvoidanceBehaviour implements BoidBehaviour {
 
         rangeParam = new Parameter(
                 "Avoidance",
-                "Avoidance Range",
+                "Range",
                 "Controls the perception range for avoidance",
                 0.0f,
                 30.0f,
@@ -27,8 +27,8 @@ public class AvoidanceBehaviour implements BoidBehaviour {
 
         factorParam = new Parameter(
                 "Avoidance",
-                "Avoidance Factor",
-                "Controls the strength of avoidance behavior",
+                "Factor",
+                "Controls how aggressively the boid steers to avoid other boids",
                 0.0f,
                 0.1f,
                 0.2f);
@@ -36,7 +36,7 @@ public class AvoidanceBehaviour implements BoidBehaviour {
 
         fovParam = new Parameter(
                 "Avoidance",
-                "Avoidance FOV",
+                "Field Of View",
                 "Controls the field of view for avoidance behavior",
                 0.0f,
                 270.0f,

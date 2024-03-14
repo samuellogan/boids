@@ -30,7 +30,7 @@ public class AlignmentBehaviour implements BoidBehaviour {
         factorParam = new Parameter(
                 "Behavior Strength",
                 "Alignment Factor",
-                "Controls the strength of alignment behavior",
+                "Controls how much the boid steers towards the average velocity (direction) of its neighbors",
                 0.0f,
                 0.1f,
                 0.2f);
