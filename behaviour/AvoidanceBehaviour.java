@@ -8,6 +8,8 @@ import models.ParameterGroup;
 import util.Vector;
 
 public class AvoidanceBehaviour implements BoidBehaviour {
+    private static boolean isEnabled;
+    private static boolean isDebugging;
     private static Parameter factorParam;
     private static Parameter rangeParam;
     private static Parameter fovParam;
@@ -55,6 +57,9 @@ public class AvoidanceBehaviour implements BoidBehaviour {
      */
     @Override
     public void applyBehavior(Boid boid, List<Boid> boids) {
+        if (!isEnabled)
+            return;
+
         float factor = factorParam.getValue();
         float range = rangeParam.getValue();
         float fovRad = (float) Math.toRadians(fovParam.getValue());
@@ -95,6 +100,22 @@ public class AvoidanceBehaviour implements BoidBehaviour {
      */
     public static ParameterGroup getParameters() {
         return parameters;
+    }
+
+    public static boolean isEnabled() {
+        return isEnabled;
+    }
+
+    public static void setEnabled(boolean enabled) {
+        isEnabled = enabled;
+    }
+
+    public static boolean isDebugging() {
+        return isDebugging;
+    }
+
+    public static void setDebugging(boolean debugging) {
+        isDebugging = debugging;
     }
 
     public static void setFactor(float factor) {

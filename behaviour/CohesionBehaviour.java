@@ -8,7 +8,8 @@ import models.ParameterGroup;
 import util.Vector;
 
 public class CohesionBehaviour implements BoidBehaviour {
-
+    private static boolean isEnabled;
+    private static boolean isDebugging;
     private static Parameter rangeParam;
     private static Parameter factorParam;
     private static ParameterGroup parameters;
@@ -41,6 +42,9 @@ public class CohesionBehaviour implements BoidBehaviour {
 
     @Override
     public void applyBehavior(Boid boid, List<Boid> boids) {
+        if (!isEnabled)
+            return;
+
         float range = rangeParam.getValue();
         float factor = factorParam.getValue();
 
@@ -76,6 +80,22 @@ public class CohesionBehaviour implements BoidBehaviour {
      */
     public static ParameterGroup getParameters() {
         return parameters;
+    }
+
+    public static boolean isEnabled() {
+        return isEnabled;
+    }
+
+    public static void setEnabled(boolean enabled) {
+        isEnabled = enabled;
+    }
+
+    public static boolean isDebugging() {
+        return isDebugging;
+    }
+
+    public static void setDebugging(boolean debugging) {
+        isDebugging = debugging;
     }
 
     public static void setRange(float range) {

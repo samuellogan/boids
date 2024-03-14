@@ -37,7 +37,7 @@ public class ControlPanel extends JFrame {
                     gbc.gridy++;
                 }
 
-                add(createSection(group.getName(), parameterPanel));
+                add(createSection(group.getName(), parameterPanel, group.getName()));
             }
 
             pack();
@@ -57,6 +57,14 @@ public class ControlPanel extends JFrame {
 
         JLabel nameLabel = new JLabel(parameter.getName());
         nameLabel.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 10));
+
+        // Add a top margin to the nameLabel
+        int topMargin = 5;
+        int leftMargin = 0;
+        int bottomMargin = 0;
+        int rightMargin = 0;
+        nameLabel.setBorder(BorderFactory.createEmptyBorder(topMargin, leftMargin, bottomMargin, rightMargin));
+
         labelPanel.add(nameLabel);
 
         JLabel descriptionLabel = new JLabel(
@@ -113,13 +121,46 @@ public class ControlPanel extends JFrame {
         return parameterPanel;
     }
 
-    private JPanel createSection(String title, JPanel contentPanel) {
+    private JPanel createSection(String title, JPanel contentPanel, String behaviorName) {
         JPanel sectionPanel = new JPanel();
         sectionPanel.setLayout(new BorderLayout());
         sectionPanel.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createEmptyBorder(5, 5, 5, 5),
                 BorderFactory.createTitledBorder(title)));
+
+        // Create and configure the checkbox
+        JCheckBox behaviorEnableCheckbox = new JCheckBox("Enable");
+        behaviorEnableCheckbox.setSelected(FlockSimulation.isBehaviorEnabled(behaviorName));
+        behaviorEnableCheckbox.addActionListener(e -> FlockSimulation.toggleBehaviorEnabled(behaviorName,
+                behaviorEnableCheckbox.isSelected()));
+
+        JCheckBox behaviorDebugCheckbox = new JCheckBox("Debug");
+        behaviorDebugCheckbox.setSelected(FlockSimulation.isBehaviorDebugging(behaviorName));
+        behaviorDebugCheckbox.addActionListener(e -> FlockSimulation.toggleBehaviorDebugging(behaviorName,
+                behaviorDebugCheckbox.isSelected()));
+
+        Font currentFont = behaviorEnableCheckbox.getFont();
+        float smallerFontSize = currentFont.getSize() - 2.0f; // Decrease font size by 2
+        behaviorEnableCheckbox.setFont(currentFont.deriveFont(smallerFontSize));
+        behaviorDebugCheckbox.setFont(currentFont.deriveFont(smallerFontSize));
+
+        // Use GridBagLayout for precise control over the checkbox's placement
+        JPanel checkboxPanel = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.anchor = GridBagConstraints.WEST; // Align the checkbox to the left
+        gbc.insets = new Insets(0, 0, 0, 0); // No margins around the checkbox
+
+        // Add the checkbox to the checkboxPanel with the constraints
+        checkboxPanel.add(behaviorEnableCheckbox, gbc);
+        checkboxPanel.add(behaviorDebugCheckbox, gbc);
+
+        // Add the checkboxPanel to the sectionPanel, positioned at the top
+        sectionPanel.add(checkboxPanel, BorderLayout.NORTH);
+
+        // Add the contentPanel to the sectionPanel, in the center
         sectionPanel.add(contentPanel, BorderLayout.CENTER);
+
         return sectionPanel;
     }
+
 }

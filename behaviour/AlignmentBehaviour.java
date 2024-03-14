@@ -10,11 +10,15 @@ import util.Vector;
 public class AlignmentBehaviour implements BoidBehaviour {
     // All parameters are static so that they can be accessed from the ControlPanel
     // All boids share the same parameters
+    private static boolean isEnabled;
+    private static boolean isDebugging;
     private static Parameter rangeParam;
     private static Parameter factorParam;
     private static ParameterGroup parameters;
 
     static {
+        isEnabled = true;
+
         parameters = new ParameterGroup("Alignment");
 
         // Initialize parameters and add them to the group
@@ -48,6 +52,9 @@ public class AlignmentBehaviour implements BoidBehaviour {
      */
     @Override
     public void applyBehavior(Boid boid, List<Boid> boids) {
+        if (!isEnabled)
+            return;
+
         float xvelAvg = 0;
         float yvelAvg = 0;
         int neighboringBoids = 0;
@@ -74,6 +81,22 @@ public class AlignmentBehaviour implements BoidBehaviour {
             boid.velocity.x += (xvelAvg - boid.velocity.x) * factor;
             boid.velocity.y += (yvelAvg - boid.velocity.y) * factor;
         }
+    }
+
+    public static boolean isEnabled() {
+        return isEnabled;
+    }
+
+    public static void setEnabled(boolean enabled) {
+        isEnabled = enabled;
+    }
+
+    public static boolean isDebugging() {
+        return isDebugging;
+    }
+
+    public static void setDebugging(boolean debugging) {
+        isDebugging = debugging;
     }
 
     /**

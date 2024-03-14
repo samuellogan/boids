@@ -29,8 +29,8 @@ public class FlockSimulation extends JPanel {
     // List of parameter groups for the control panel
     private List<ParameterGroup> parameterGroups;
 
-    float maxSpeed = 2.0f;
-    float minSpeed = 4.0f;
+    static float maxSpeed = 2.0f;
+    static float minSpeed = 4.0f;
 
     /**
      * Constructs the FlockSimulation panel, initializes the simulation environment,
@@ -52,7 +52,12 @@ public class FlockSimulation extends JPanel {
 
         // Initialize boids with random positions within the panel's bounds
         for (int i = 0; i < 100; i++) {
-            boids.add(new Boid((float) Math.random() * 800, (float) Math.random() * 600));
+            Boid boid = new Boid((float) Math.random() * 800, (float) Math.random() * 600);
+            if (i % 2 == 0)
+                boid.setBiased(true);
+
+            boids.add(boid);
+
         }
         boids.get(0).setDebug(true); // Set the first boid to debug mode
 
@@ -61,16 +66,22 @@ public class FlockSimulation extends JPanel {
     }
 
     private void initializeParameterGroups() {
+        ParameterGroup avoidanceGroup = AvoidanceBehaviour.getParameters();
         ParameterGroup alignmentGroup = AlignmentBehaviour.getParameters();
         ParameterGroup cohesionGroup = CohesionBehaviour.getParameters();
-        ParameterGroup avoidanceGroup = AvoidanceBehaviour.getParameters();
+        ParameterGroup limitSpeedGroup = SpeedLimiterBehaviour.getParameters();
+        ParameterGroup biasBehaviour = BiasBehaviour.getParameters();
 
+        if (avoidanceGroup != null)
+            parameterGroups.add(avoidanceGroup);
         if (alignmentGroup != null)
             parameterGroups.add(alignmentGroup);
         if (cohesionGroup != null)
             parameterGroups.add(cohesionGroup);
-        if (avoidanceGroup != null)
-            parameterGroups.add(avoidanceGroup);
+        if (limitSpeedGroup != null)
+            parameterGroups.add(limitSpeedGroup);
+        if (biasBehaviour != null)
+            parameterGroups.add(biasBehaviour);
     }
 
     // Getter for parameter groups to be used by the UI
@@ -148,9 +159,14 @@ public class FlockSimulation extends JPanel {
         float cohereRange = CohesionBehaviour.getRange();
         float alignRange = AlignmentBehaviour.getRange();
 
-        drawFieldOfView(g2d, debugBoid, Color.RED, avoidRange, avoidFOV);
-        drawFieldOfView(g2d, debugBoid, Color.BLUE, cohereRange, 360);
-        drawFieldOfView(g2d, debugBoid, Color.GREEN, alignRange, 360);
+        if (AvoidanceBehaviour.isEnabled() && AvoidanceBehaviour.isDebugging())
+            drawFieldOfView(g2d, debugBoid, Color.RED, avoidRange, avoidFOV);
+
+        if (CohesionBehaviour.isEnabled() && CohesionBehaviour.isDebugging())
+            drawFieldOfView(g2d, debugBoid, Color.BLUE, cohereRange, 360);
+
+        if (AlignmentBehaviour.isEnabled() && AlignmentBehaviour.isDebugging())
+            drawFieldOfView(g2d, debugBoid, Color.GREEN, alignRange, 360);
     }
 
     private void drawFieldOfView(Graphics2D g2d, Boid debugBoid, Color color, float areaOfInfluence,
@@ -218,5 +234,87 @@ public class FlockSimulation extends JPanel {
 
             new ControlPanel(simulation);
         });
+    }
+
+    public static void toggleBehaviorEnabled(String behaviorName, boolean isEnabled) {
+        switch (behaviorName) {
+            case "Alignment":
+                AlignmentBehaviour.setEnabled(isEnabled);
+                break;
+            case "Cohesion":
+                CohesionBehaviour.setEnabled(isEnabled);
+                break;
+            case "Avoidance":
+                AvoidanceBehaviour.setEnabled(isEnabled);
+                break;
+            case "Speed Limiter":
+                SpeedLimiterBehaviour.setEnabled(isEnabled);
+                break;
+            case "Bias":
+                BiasBehaviour.setEnabled(isEnabled);
+                break;
+
+        }
+    }
+
+    public static boolean isBehaviorEnabled(String behaviorName) {
+        switch (behaviorName) {
+            case "Alignment":
+                return AlignmentBehaviour.isEnabled();
+            case "Cohesion":
+                return CohesionBehaviour.isEnabled();
+            case "Avoidance":
+                return AvoidanceBehaviour.isEnabled();
+            case "Speed Limiter":
+                return SpeedLimiterBehaviour.isEnabled();
+            case "Bias":
+                return BiasBehaviour.isEnabled();
+        }
+        return false;
+    }
+
+    public static void toggleBehaviorDebugging(String behaviorName, boolean isEnabled) {
+        switch (behaviorName) {
+            case "Alignment":
+                AlignmentBehaviour.setDebugging(isEnabled);
+                break;
+            case "Cohesion":
+                CohesionBehaviour.setDebugging(isEnabled);
+                break;
+            case "Avoidance":
+                AvoidanceBehaviour.setDebugging(isEnabled);
+                break;
+            case "Speed Limiter":
+                SpeedLimiterBehaviour.setDebugging(isEnabled);
+                break;
+            case "Bias":
+                BiasBehaviour.setDebugging(isEnabled);
+                break;
+
+        }
+    }
+
+    public static boolean isBehaviorDebugging(String behaviorName) {
+        switch (behaviorName) {
+            case "Alignment":
+                return AlignmentBehaviour.isDebugging();
+            case "Cohesion":
+                return CohesionBehaviour.isDebugging();
+            case "Avoidance":
+                return AvoidanceBehaviour.isDebugging();
+            case "Speed Limiter":
+                return SpeedLimiterBehaviour.isDebugging();
+            case "Bias":
+                return BiasBehaviour.isDebugging();
+        }
+        return false;
+    }
+
+    public static float getMaxSpeed() {
+        return maxSpeed;
+    }
+
+    public static float getMinSpeed() {
+        return minSpeed;
     }
 }

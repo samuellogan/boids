@@ -4,8 +4,11 @@ import java.util.List;
 
 import behaviour.AlignmentBehaviour;
 import behaviour.AvoidanceBehaviour;
+import behaviour.BiasBehaviour;
 import behaviour.BoidBehaviour;
 import behaviour.CohesionBehaviour;
+import behaviour.SpeedLimiterBehaviour;
+import behaviour.WrapBehaviour;
 import util.Vector;
 
 /**
@@ -18,6 +21,7 @@ import util.Vector;
  */
 public class Boid {
     private boolean isDebug = false;
+    private boolean isBiased = false;
 
     public Vector position;
     public Vector velocity;
@@ -27,9 +31,9 @@ public class Boid {
     private BoidBehaviour avoidanceBehavior;
     private BoidBehaviour alignmentBehavior;
     private BoidBehaviour cohesionBehavior;
-
-    private float minSpeed = 2.0f;
-    private float maxSpeed = 4.0f;
+    private BoidBehaviour biasBehaviour;
+    private BoidBehaviour wrapBehaviour;
+    private BoidBehaviour limitSpeedBehaviour;
 
     /**
      * Constructs a Boid given an initial position. The Boid's velocity is
@@ -48,6 +52,9 @@ public class Boid {
         avoidanceBehavior = new AvoidanceBehaviour();
         alignmentBehavior = new AlignmentBehaviour();
         cohesionBehavior = new CohesionBehaviour();
+        biasBehaviour = new BiasBehaviour();
+        wrapBehaviour = new WrapBehaviour();
+        limitSpeedBehaviour = new SpeedLimiterBehaviour();
     }
 
     /**
@@ -59,6 +66,7 @@ public class Boid {
         avoidanceBehavior.applyBehavior(this, boids);
         alignmentBehavior.applyBehavior(this, boids);
         cohesionBehavior.applyBehavior(this, boids);
+        biasBehaviour.applyBehavior(this, boids);
 
         // Calculate new velocity based on current acceleration
         Vector newVelocity = new Vector(velocity.x, velocity.y);
@@ -74,30 +82,10 @@ public class Boid {
         velocity = newVelocity;
         position.add(velocity);
 
-        velocity.limit(minSpeed, maxSpeed);
+        limitSpeedBehaviour.applyBehavior(this, boids);
+        wrapBehaviour.applyBehavior(this, boids);
 
-        wrapAroundBorders();
         acceleration.multiply(0);
-    }
-
-    /**
-     * Ensures that the Boid wraps around the edges of the screen, appearing on the
-     * opposite side if it moves past the border. This creates an effect of
-     * continuous space where Boids can roam freely without disappearing once they
-     * reach the screen's limits.
-     */
-    private void wrapAroundBorders() {
-        // Check horizontal boundaries
-        if (position.x < 0)
-            position.x += screenSize.x;
-        if (position.x > screenSize.x)
-            position.x -= screenSize.x;
-
-        // Check vertical boundaries
-        if (position.y < 0)
-            position.y += screenSize.y;
-        if (position.y > screenSize.y)
-            position.y -= screenSize.y;
     }
 
     /**
@@ -109,24 +97,6 @@ public class Boid {
      */
     public void setScreenSize(float width, float height) {
         screenSize = new Vector(width, height);
-    }
-
-    /**
-     * Sets the minimum speed for the Boid.
-     * 
-     * @param minSpeed The minimum speed of the Boid.
-     */
-    public void setMinSpeed(float minSpeed) {
-        this.minSpeed = minSpeed;
-    }
-
-    /**
-     * Sets the maximum speed for the Boid.
-     * 
-     * @param maxSpeed The maximum speed of the Boid.
-     */
-    public void setMaxSpeed(float maxSpeed) {
-        this.maxSpeed = maxSpeed;
     }
 
     /**
@@ -146,5 +116,13 @@ public class Boid {
      */
     public boolean isDebug() {
         return isDebug;
+    }
+
+    public void setBiased(boolean isBiased) {
+        this.isBiased = isBiased;
+    }
+
+    public boolean isBiased() {
+        return isBiased;
     }
 }
